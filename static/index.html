@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Lab AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f8;
+        }
+
+        .chat-container {
+            display: flex;
+            height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #1e3a8a;
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        #chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: #ffffff;
+        }
+
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            background-color: #e5e7eb;
+            border-top: 1px solid #d1d5db;
+        }
+
+        .input-row {
+            display: flex;
+            margin-bottom: 0.5rem;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 24px;
+            margin-right: 0.5rem;
+        }
+
+        #send-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #send-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        .option-btn {
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 0.5rem;
+        }
+
+        .option-btn:hover {
+            background-color: #2d3748;
+        }
+
+        .option-input {
+            display: none;
+            flex-grow: 1;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 24px;
+            margin-right: 0.5rem;
+        }
+
+        .agent-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .agent-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            object-fit: cover;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 1rem;
+            align-items: flex-start;
+        }
+
+        .message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            object-fit: cover;
+        }
+
+        .message .bubble {
+            background-color: #e6f3ff;
+            border-radius: 18px;
+            padding: 0.75rem 1rem;
+            max-width: 70%;
+        }
+
+        .message.user .bubble {
+            background-color: #dcf8c6;
+            margin-left: auto;
+        }
+
+        .message .name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            color: #333;
+        }
+
+        .feedback-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .feedback-button {
+            margin: 0 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .feedback-button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="sidebar">
+            <h2 class="text-xl font-bold mb-4">Lab Agents</h2>
+            <div id="agent-status">
+                <!-- Agent status will be dynamically populated here -->
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="chat-header">Chemistry Lab AI</div>
+            <div id="chat-messages"></div>
+            <div class="input-area">
+                <div class="input-row">
+                    <input type="text" id="user-input" placeholder="Type your message here...">
+                    <button id="send-btn">Send</button>
+                </div>
+                <div class="input-row">
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="updateImageName()">
+                    <button class="option-btn" onclick="document.getElementById('image-upload').click()">Upload Image</button>
+                    <span id="image-name"></span>
+                    <button class="option-btn" onclick="toggleOption('literature')">Set Literature Path</button>
+                    <input type="text" id="literature-path" class="option-input" placeholder="Enter Literature Path">
+                    <button class="option-btn" onclick="toggleOption('web-url')">Set Web URL Path</button>
+                    <input type="text" id="web-url-path" class="option-input" placeholder="Enter Web URL Path">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const agentStatus = document.getElementById('agent-status');
+        const literaturePath = document.getElementById('literature-path');
+        const webUrlPath = document.getElementById('web-url-path');
+        const imageUpload = document.getElementById('image-upload');
+        const imageName = document.getElementById('image-name');
+        const avatars = {
+            'User': "/static/images/user-avatar.png",
+            'Lab_Director': '/static/images/lab-director-avatar.png',
+            'Senior_Chemist': '/static/images/senior-chemist-avatar.png',
+            'Lab_Manager': '/static/images/lab-manager-avatar.png',
+            'Safety_Officer': '/static/images/safety-officer-avatar.png',
+            'Analytical_Chemist': '/static/images/analytical-chemist-avatar.png',
+            'System': '/static/images/system-avatar.png'
+        };
+
+        let agents = [
+            { name: 'Lab_Director', evolutionLevel: 1 },
+            { name: 'Senior_Chemist', evolutionLevel: 1 },
+            { name: 'Lab_Manager', evolutionLevel: 1 },
+            { name: 'Safety_Officer', evolutionLevel: 1 },
+            { name: 'Analytical_Chemist', evolutionLevel: 1 }
+        ];
+
+        function updateAgentStatus() {
+            agentStatus.innerHTML = agents.map(agent => `
+                <div class="agent-info">
+                    <img src="${avatars[agent.name]}" alt="${agent.name}" class="agent-avatar">
+                    <span>${agent.name.replace('_', ' ')} (Level ${agent.evolutionLevel})</span>
+                </div>
+            `).join('');
+        }
+
+        updateAgentStatus();
+
+        function addMessage(role, name, content, imageUrl = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            const avatarSrc = avatars[name] || '/static/images/system-avatar.png';
+            let messageContent = `
+                <img src="${avatarSrc}" alt="${name}" class="avatar" onerror="this.src='/static/images/system-avatar.png'">
+                <div class="bubble">
+                    <div class="name">${name.replace('_', ' ')}</div>
+                    <div>${content}</div>
+            `;
+            
+            if (imageUrl) {
+                console.log("Adding image to message:", imageUrl);
+                messageContent += `<img src="${imageUrl}" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px;" onerror="console.error('Image failed to load:', this.src);">`;
+            }
+            
+            messageContent += `</div>`;
+            messageDiv.innerHTML = messageContent;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            if (role === 'assistant') {
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'feedback-buttons';
+                feedbackDiv.innerHTML = `
+                    <button class="feedback-button bg-green-500 text-white" onclick="provideFeedback('good')">👍 Good</button>
+                    <button class="feedback-button bg-yellow-500 text-white" onclick="provideFeedback('average')">👌 Average</button>
+                    <button class="feedback-button bg-red-500 text-white" onclick="provideFeedback('poor')">👎 Poor</button>
+                `;
+                chatMessages.appendChild(feedbackDiv);
+            }
+        }
+
+        function toggleOption(option) {
+            const input = option === 'literature' ? literaturePath : webUrlPath;
+            input.style.display = input.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function updateImageName() {
+            const imageFile = imageUpload.files[0];
+            if (imageFile) {
+                imageName.textContent = imageFile.name;
+                console.log("Image selected:", imageFile.name);
+            } else {
+                imageName.textContent = '';
+            }
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            const imageFile = imageUpload.files[0];
+            console.log("Image file:", imageFile);
+
+            if (message || imageFile) {
+                const formData = new FormData();
+                formData.append('message', message);
+                let imageDataUrl = null;
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                    imageDataUrl = await readFileAsDataURL(imageFile);
+                    console.log("Image Data URL created:", imageDataUrl.slice(0, 50) + "..."); // 只显示 URL 的开头部分
+                }
+                formData.append('literature_path', literaturePath.value.trim());
+                formData.append('web_url_path', webUrlPath.value.trim());
+
+                addMessage('user', 'User', message, imageDataUrl);
+                userInput.value = '';
+                imageUpload.value = '';
+                imageName.textContent = '';
+
+                try {
+                    const response = await fetch('/simulate', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log("Received data:", data);
+
+                    if (Array.isArray(data)) {
+                        data.forEach(msg => {
+                            if (msg.role === 'assistant') {
+                                addMessage('assistant', msg.name || 'AI', msg.content);
+                                const agent = agents.find(a => a.name === msg.name);
+                                if (agent && Math.random() > 0.7) {
+                                    agent.evolutionLevel = Math.min(agent.evolutionLevel + 1, 5);
+                                    updateAgentStatus();
+                                    addMessage('system', 'System', `${agent.name.replace('_', ' ')} has evolved to level ${agent.evolutionLevel}!`);
+                                }
+                            }
+                        });
+                    } else {
+                        console.error("Unexpected response format:", data);
+                        addMessage('assistant', 'System', 'Received an unexpected response from the server.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    addMessage('assistant', 'System', 'An error occurred while processing your request.');
+                }
+            }
+        }
+
+        async function provideFeedback(feedback) {
+            try {
+                const response = await fetch('/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ feedback: feedback }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("Feedback response:", data);
+
+                addMessage('system', 'System', `Thank you for your feedback! The agents will use this to improve.`);
+
+                const randomAgent = agents[Math.floor(Math.random() * agents.length)];
+                const newSkill = `New_Skill_${Math.floor(Math.random() * 100)}`;
+                addMessage('system', 'System', `${randomAgent.name.replace('_', ' ')} has acquired a new skill: ${newSkill}`);
+
+            } catch (error) {
+                console.error('Error sending feedback:', error);
+                addMessage('system', 'System', 'An error occurred while sending your feedback.');
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        console.log("JavaScript initialized");
+    </script>
+</body>
+</html>
