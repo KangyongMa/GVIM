@@ -21,7 +21,7 @@ GVIM (Generative Virtual Intelligence for Molecules) is a groundbreaking project
 
 ```bash
 # Create and activate a new conda environment
-conda create -n gvim python=3.8
+conda create -n gvim python=3.9.19
 conda activate gvim
 
 # Install required packages
