@@ -1,16 +1,28 @@
-GVIM: Self-Evolving AI for Chemical Research
-GVIM is a Python-based project designed to integrate AI-driven approaches in chemical research. This repository includes scripts and Jupyter notebooks for training and testing AI models to assist in intelligent chemical research tasks. The goal is to create a system where AI agents evolve and adapt to improve research efficiency.
+<h1 align="center">
+  <b>GVIM: Self-Evolving AI for Chemical Research 🧪🤖</b>
+</h1>
 
-Features
-Self-evolving AI agents
-Integration with chemical research tasks
-Customizable model training
+<p align="center">
+  🧬 [Paper] | 🔬 [Blog Post] | 📊 [Data]
+</p>
 
-Installation
-Clone the repository:
-git clone https://github.com/KangyongMa/GVIM.git
+GVIM (Generative Virtual Intelligence for Molecules) is a groundbreaking project that integrates self-evolving AI agents into chemical research. Our goal is to revolutionize the efficiency and capabilities of intelligent assistance in scientific discovery, specifically tailored for chemistry.
 
-Citation
-Application of Self-Evolving AI Agents in Chemical Research: A Novel Intelligent Assistance System  
-Kangyong Ma  
-College of Physics and Electronic Information Engineering, Zhejiang Normal University, Jinhua City 321000, China.  
+## 🌟 Key Features
+
+- Self-evolving AI agents for chemical research tasks
+- Seamless integration with existing research workflows
+- Customizable model training for specific chemical domains
+- Intelligent task automation and data analysis
+
+## 📋 Requirements
+
+### Installation
+
+```bash
+# Create and activate a new conda environment
+conda create -n gvim python=3.8
+conda activate gvim
+
+# Install required packages
+pip install -r requirements.txt
