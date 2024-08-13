@@ -6,14 +6,25 @@
   🧬 [Paper] | 🔬 [Blog Post] | 📊 [Data]
 </p>
 
-GVIM (Generative Virtual Intelligence for Molecules) is a groundbreaking project that integrates self-evolving AI agents into chemical research. Our goal is to revolutionize the efficiency and capabilities of intelligent assistance in scientific discovery, specifically tailored for chemistry.
-
+This project involves fine-tuning open-source large language models with chemical science data, evaluated using a specialized automated scoring system. The resulting chemical intelligent assistant system utilizes the fine-tuned Mistral Nemo model and can flexibly incorporate various advanced models. It integrates chemistry-specific features like molecular visualization and literature retrieval, while also possessing autonomous evolution capabilities through knowledge accumulation, skill acquisition, and collaborative mechanisms. This approach enables continuous optimization of the system's professional abilities and interaction quality, overcoming limitations of traditional static AI systems in the chemistry domain.
 ## 🌟 Key Features
 
-- Self-evolving AI agents for chemical research tasks
-- Seamless integration with existing research workflows
-- Customizable model training for specific chemical domains
-- Intelligent task automation and data analysis
+-Fine-tuning Large Language Models Based on Chemistry Domain Data
+-Utilizing collected and curated chemistry instruction data
+-Fine-tuning mainstream open-source large language models
+-Developing a specialized automatic scoring system for the chemistry domain
+-Innovative Chemical Intelligent Assistant System Design
+-Using the fine-tuned Mistral Nemo model as one of the primary models
+-Incorporating mechanisms for flexible invocation of various advanced models
+-Continuously leveraging the latest AI capabilities, considering the rapid iteration of large language models
+-Deep Integration of Chemistry Expertise and Requirements
+-Integrating professional functions such as molecular visualization, SMILES string processing, and chemical literature retrieval
+-Significantly enhancing the system's practical value in chemical research and applications
+-Autonomous Evolution Capability
+-Through knowledge accumulation, skill acquisition, performance evaluation, and collective collaboration mechanisms
+-Continuously optimizing professional capabilities and interaction quality
+-Breaking through the inherent static limitations of traditional AI systems
+
 
 ## 📋 Requirements
 
