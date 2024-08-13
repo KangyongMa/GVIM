@@ -1,5 +1,5 @@
 <h1 align="center">
-  <b>GVIM: Self-Evolving AI for Chemical Research 🧪🤖</b>
+  <b>Application of Self-Evolving AI Agents in Chemical Research: A Novel Intelligent Assistance System 🧪🤖</b>
 </h1>
 
 <p align="center">
