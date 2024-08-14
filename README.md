@@ -37,9 +37,11 @@ This project involves fine-tuning open-source large language models with chemica
 # Create and activate a new conda environment
 conda create -n gvim python=3.9.19
 conda activate gvim
-python app.py
+
 # Install required packages
 pip install -r requirements.txt
+# Run it
+python app.py
 ```
 
 ---
