@@ -44,8 +44,16 @@ pip install -r requirements.txt
 
 ---
 
-Kangyong Ma<sup>1*</sup>
-
-1. College of Physics and Electronic Information Engineering, Zhejiang Normal University, Jinhua City 321000, China.
-
-E-mail address: kangyongma@outlook.com (K.y.Ma); kangyongma@gmail.com
+{
+  "name": "Kangyong Ma",
+  "affiliation": {
+    "institution": "College of Physics and Electronic Information Engineering, Zhejiang Normal University",
+    "city": "Jinhua City",
+    "postalCode": "321000",
+    "country": "China"
+  },
+  "email": [
+    "kangyongma@outlook.com",
+    "kangyongma@gmail.com"
+  ]
+}
