@@ -53,6 +53,7 @@ python app.py
     "city": "Jinhua City",
     "postalCode": "321000",
     "country": "China"
+    "DOI":"10.26434/chemrxiv-2024-6tv8c"
   },
   "email": [
     "kangyongma@outlook.com",
