@@ -29,6 +29,11 @@ This project involves fine-tuning open-source large language models with chemica
 - Continuously optimizing professional capabilities and interaction quality
 - Breaking through the inherent static limitations of traditional AI systems
 
+## 🧬 Key Additions:
+1. **Configuration Section**: Added instructions for setting the file path and managing API usage limits.
+2. **File Path Update**: Explicitly mentioned to update the file path based on the user’s local setup.
+3. **API Usage Limits**: Provided a reminder about API call limits to ensure users are aware and can plan their usage accordingly.
+
 ## 📋 Requirements
 
 ### Installation
