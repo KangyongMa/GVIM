@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[🧬 Paper](#) | [🔬 Blog Post](#) | [📊 Data](#) | [📹 Teaching Video]([[https://www.youtube.com/watch?v=78g1PUSpBNQ]])
+[🧬 Paper](#) | [🔬 Blog Post](#) | [📊 Data](#) | [📹 Teaching Video](https://www.youtube.com/watch?v=78g1PUSpBNQ)
 
 </div>
 
