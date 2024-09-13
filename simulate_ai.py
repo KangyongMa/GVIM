@@ -31,13 +31,13 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-os.environ["TAVILY_API_KEY"] = ""
-os.environ["REPLICATE_API_TOKEN"] = ""  # Replace with your actual token
+os.environ["TAVILY_API_KEY"] = "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"
+os.environ["REPLICATE_API_TOKEN"] = "r8_YcIEE93WZZOpkUwMzBcuIk69cjo65tE3WLMCj"  # Replace with your actual token
 
 config_list = [
     {
         "model": "llama3-70b-8192",
-        "api_key": "",
+        "api_key": "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",
         "base_url": "https://api.groq.com/openai/v1"
     },
     {
@@ -47,16 +47,16 @@ config_list = [
     },
     {
         "model": "mixtral-8x7b-32768",
-        "api_key": "",
+        "api_key": "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",
         "base_url": "https://api.groq.com/openai/v1"
     },
 ]
 
 llava_config_list = [
     {
-        "model": "",
+        "model": "whatever, will be ignored for remote",
         "api_key": "None",
-        "base_url": "",
+        "base_url": "yorickvp/llava-13b:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591",
     }
 ]
 
