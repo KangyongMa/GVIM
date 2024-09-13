@@ -61,7 +61,6 @@ h11==0.14.0
 h2==4.1.0
 hpack==4.0.0
 httpcore==1.0.2
-httptools==0.6.1
 httpx==0.27.0
 huggingface-hub==0.23.4
 humanfriendly==10.0
@@ -106,7 +105,7 @@ mypy-extensions==1.0.0
 networkx==3.2.1
 nh3==0.2.17
 nltk==3.8.1
-numpy==1.26.4
+numpy>=1.22.5
 oauthlib==3.2.2
 onnxruntime==1.17.1
 openai==1.35.7
@@ -126,7 +125,6 @@ packaging==24.1
 pandas==2.2.2
 phi==0.6.7
 pillow==10.3.0
-pip==24.2
 pkginfo==1.10.0
 posthog==3.5.0
 priority==2.0.0
@@ -203,4 +201,12 @@ unicodedata2==15.1.0
 urllib3==1.26.19
 uvicorn==0.20.0
 verboselogs==1.7
-watchfiles==0
+websocket-client==1.8.0
+websockets==12.0
+Werkzeug==3.0.3
+wheel==0.43.0
+win-inet-pton==1.1.0
+wrapt==1.14.1
+wsproto==1.2.0
+yarl==1.9.3
+zipp==3.19.2
