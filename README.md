@@ -33,6 +33,14 @@ This project involves fine-tuning open-source large language models with chemica
 1. **Configuration Section**: Added instructions for setting the file path and managing API usage limits.
 2. **File Path Update**: Explicitly mentioned to update the file path based on the user’s local setup.
 3. **API Usage Limits**: Provided a reminder about API call limits to ensure users are aware and can plan their usage accordingly.
+4. ## API Key Setup
+
+Ensure that you have configured the necessary API keys in your local environment before running the project. The following keys need to be manually set up:
+
+- `TAVILY_API_KEY`
+- `REPLICATE_API_TOKEN`
+- `Groq_API_KEY`
+
 
 ## 📋 Requirements
 
