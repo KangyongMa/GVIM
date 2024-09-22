@@ -147,7 +147,7 @@ except Exception as e:
 tavily_tool = Tool(
     name="Tavily Search",
     func=tavily_search,
-    description="Useful for searching the internet for recent information on chemical compounds and reactions."
+    description="Useful for searching the internet for recent information on Chemistry."
 )
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
