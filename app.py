@@ -29,20 +29,17 @@ def configure():
 
 @app.route('/simulate', methods=['POST'])
 def simulate():
-    global chemistry_lab
+    global chemistry_lab, web_url_path
     if not chemistry_lab:
-        chemistry_lab = get_chemistry_lab()  # Initialize with default settings if not configured
+        chemistry_lab = get_chemistry_lab()
     
     user_input = request.form.get('message', '')
     image_file = request.files.get('image')
-    
-    logger.info(f"Received user input: {user_input}")
-    logger.info(f"Received image: {image_file.filename if image_file else 'None'}")
+    web_url_path = request.form.get('web_url_path', '')  
     
     try:
         image_data = image_file.read() if image_file else None
-        response = chemistry_lab.process_user_input(user_input, image_data)
-        logger.info(f"Generated response: {response}")
+        response = chemistry_lab.process_user_input(user_input, image_data, web_url_path=web_url_path)
         return jsonify(response)
     except Exception as e:
         logger.error(f"Error processing user input: {str(e)}", exc_info=True)
