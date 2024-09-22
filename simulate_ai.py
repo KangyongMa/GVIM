@@ -25,7 +25,6 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-
 warnings.filterwarnings("ignore")
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -36,7 +35,7 @@ os.environ["REPLICATE_API_TOKEN"] = ""  # Replace with your actual token
 
 config_list = [
     {
-        "model": "llama3-70b-8192",
+        "model": "llama3-8b-8192",
         "api_key": "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",
         "base_url": "https://api.groq.com/openai/v1"
     },
@@ -60,21 +59,31 @@ llava_config_list = [
     }
 ]
 
+def is_valid_url(url):
+    regex = re.compile(
+        r'^(?:http|ftp)s?://'  # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return re.match(regex, url) is not None
+
 def llava_call(prompt: str, image_data: Union[bytes, None] = None, config: Dict[str, Any] = None) -> str:
     if config is None:
         config = llava_config_list[0]
-    
+
     base_url = config["base_url"]
-    
+
     inputs = {
         "prompt": prompt,
     }
-    
+
     if image_data:
         # Convert image data to base64
         image_base64 = base64.b64encode(image_data).decode('utf-8')
         inputs["image"] = f"data:image/jpeg;base64,{image_base64}"
-    
+
     try:
         output = replicate.run(base_url, input=inputs)
         return "".join(output)
@@ -86,12 +95,12 @@ def load_documents(file_path):
     if not os.path.exists(file_path):
         logger.warning(f"File not found: {file_path}")
         return []
-    
+
     if file_path.endswith('.pdf'):
         loader = PyPDFLoader(file_path)
     else:
         loader = TextLoader(file_path)
-    
+
     return loader.load()
 
 # Load experiment data
@@ -115,7 +124,7 @@ else:
     embeddings = HuggingFaceEmbeddings()
     db = Chroma.from_documents(texts, embeddings)
 
-llm = ChatOpenAI(model_name="llama3-70b-8192", openai_api_key=config_list[0]["api_key"], openai_api_base=config_list[0]["base_url"])
+llm = ChatOpenAI(model_name="gemma2-9b-it", openai_api_key=config_list[0]["api_key"], openai_api_base=config_list[0]["base_url"])
 rag_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
@@ -129,20 +138,27 @@ def fallback_search(query):
 
 try:
     tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
-    
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
-    def tavily_search(query):
-        try:
-            response = tavily_client.search(query=query)
-            logger.info(f"Tavily search performed for query: {query}")
-            results = [{"url": obj["url"], "content": obj["content"]} for obj in response["results"]]
-            return results
-        except Exception as e:
-            logger.error(f"Error performing Tavily search: {str(e)}")
-            return fallback_search(query)
 except Exception as e:
     logger.error(f"Error initializing Tavily client: {str(e)}")
-    tavily_search = fallback_search
+    tavily_client = None
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+def tavily_search(query, url=None):
+    try:
+        if tavily_client is None:
+            return fallback_search(query)
+
+        if url and is_valid_url(url):
+            response = tavily_client.search(query=f"site:{url} {query}")
+        else:
+            response = tavily_client.search(query=query)
+        
+        logger.info(f"Tavily search performed for query: {query}")
+        results = [{"url": obj["url"], "content": obj["content"]} for obj in response["results"]]
+        return results
+    except Exception as e:
+        logger.error(f"Error performing Tavily search: {str(e)}")
+        return fallback_search(query)
 
 tavily_tool = Tool(
     name="Tavily Search",
@@ -207,7 +223,7 @@ def visualize_smiles(smiles: str) -> str:
         molecule = Chem.MolFromSmiles(smiles)
         if molecule is None:
             return f"Invalid SMILES string: {smiles}"
-        
+
         img = Draw.MolToImage(molecule)
         buffered = io.BytesIO()
         img.save(buffered, format="PNG")
@@ -218,30 +234,29 @@ def visualize_smiles(smiles: str) -> str:
 
 def process_smiles_in_text(text: str) -> str:
     smiles_pattern = r'\b[CN]\S+'
-    
+
     def replace_with_image(match):
         smiles = match.group(0)
         try:
             molecule = Chem.MolFromSmiles(smiles)
             if molecule is None:
                 return smiles  # Return original text if not a valid SMILES
-            
+
             if not os.path.exists('static/images'):
                 os.makedirs('static/images')
-            
+
             filename = f"molecule_{hash(smiles)}.png"
             filepath = os.path.join('static/images', filename)
-            
+
             img = Draw.MolToImage(molecule)
             img.save(filepath)
-            
+
             return f"{smiles}\n<img src='/static/images/{filename}' alt='Molecule' class='molecule-image'>"
         except Exception as e:
             logger.error(f"Error processing SMILES string: {str(e)}")
             return smiles  # Return original text if there's an error
-    
-    return re.sub(smiles_pattern, replace_with_image, text)
 
+    return re.sub(smiles_pattern, replace_with_image, text)
 
 class ChemistryAgent(autogen.AssistantAgent):
     def __init__(self, name, *args, **kwargs):
@@ -310,34 +325,21 @@ class ChemistryAgent(autogen.AssistantAgent):
 
     def process_user_input(self, user_input, image_data=None):
         response = super().process_user_input(user_input)
-        
+
         if image_data:
             llava_response = llava_call(user_input, image_data, llava_config_list[0])
             response = f"Image analysis: {llava_response}\n\n{response}"
-        
+
         topic = self.extract_topic(user_input)
         skills_used = self.identify_skills_used(user_input, response)
-        
+
         self.interaction_history.append({
             'user_input': user_input,
             'response': response,
             'topic': topic,
             'skills_used': skills_used
         })
-        
-        return response
-        
-        # Analyze the interaction
-        topic = self.extract_topic(user_input)
-        skills_used = self.identify_skills_used(user_input, response)
-        
-        self.interaction_history.append({
-            'user_input': user_input,
-            'response': response,
-            'topic': topic,
-            'skills_used': skills_used
-        })
-        
+
         return response
 
     def extract_topic(self, text):
@@ -371,6 +373,7 @@ class ChemistryLab:
         self.literature_path = literature_path
         self.setup_agents()
         self.load_documents()
+
     def load_documents(self):
         # Load experiment data
         experiment_data = load_documents("E://HuaweiMoveData//Users//makangyong//Desktop//output.txt")
@@ -421,24 +424,33 @@ class ChemistryLab:
         )
         self.manager = autogen.GroupChatManager(groupchat=self.groupchat, llm_config=manager_llm_config)
 
-    def process_user_input(self, user_input, image_data=None):
+    def process_user_input(self, user_input, image_data=None, literature_path=None, web_url_path=None):
         logger.info(f"Processing user input: {user_input}")
-        
+        logger.info(f"Web URL Path: {web_url_path}")
+
         if not self.groupchat or not self.manager:
             self.setup_groupchat()
-        
+
         try:
             if image_data:
                 llava_response = llava_call(user_input, image_data, llava_config_list[0])
                 user_input = f"{user_input}\n[IMAGE_ANALYSIS:{llava_response}]"
-            
+
+            # Check if a valid URL is provided
+            if web_url_path and is_valid_url(web_url_path):
+                search_result = tavily_search(user_input, url=web_url_path)
+            else:
+                search_result = tavily_search(user_input)
+
+            user_input = f"{user_input}\n[WEB_SEARCH:{search_result}]"
+
             chat_result = self.manager.initiate_chat(
                 self.agents[0],
                 message=user_input,
             )
-            
+
             chat_history = chat_result.chat_history if hasattr(chat_result, 'chat_history') else chat_result
-            
+
             processed_messages = []
             for message in chat_history:
                 logger.info(f"Processing message: {message}")
@@ -459,10 +471,10 @@ class ChemistryLab:
                         })
                 else:
                     logger.warning(f"Unexpected message format: {message}")
-            
+
             for agent in self.agents:
                 agent.evolve()
-            
+
             logger.info(f"Generated responses: {json.dumps(processed_messages, indent=2)}")
             return processed_messages
         except Exception as e:
@@ -477,21 +489,21 @@ class ChemistryLab:
         logger.info(f"Received feedback: {feedback}")
         for agent in self.agents:
             agent.evaluate_performance(feedback)
-            
+
     def simulate(self, num_rounds):
         for round in range(num_rounds):
             logger.info(f"Starting simulation round {round + 1}")
             for agent in self.agents:
                 agent.learn(f"New_ChemicalConcept_{round}")
-                
+
                 if random.random() > 0.7:
                     agent.acquire_skill(f"ChemicalSkill_{round}")
-                
+
                 performance = random.uniform(0, 1)
                 agent.evaluate_performance(str(performance))  # Convert to string for compatibility
-                
+
                 agent.evolve()
-            
+
             self.knowledge_sharing()
 
     def knowledge_sharing(self):
