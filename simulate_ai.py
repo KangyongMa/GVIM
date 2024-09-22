@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 os.environ["TAVILY_API_KEY"] = "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"
-os.environ["REPLICATE_API_TOKEN"] = "r8_YcIEE93WZZOpkUwMzBcuIk69cjo65tE3WLMCj"  # Replace with your actual token
+os.environ["REPLICATE_API_TOKEN"] = "r8_8DyYOzfcOoOCbo26gzSxnPR838ymofz0rJvKK"  # Replace with your actual token
 
 config_list = [
     {
@@ -56,7 +56,7 @@ llava_config_list = [
     {
         "model": "whatever, will be ignored for remote",
         "api_key": "None",
-        "base_url": "yorickvp/llava-13b:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591",
+        "base_url": "yorickvp/llava-13b:b5f6212d032508382d61ff00469ddda3e32fd8a0e75dc39d8a4191bb742157fb",
     }
 ]
 
