@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 os.environ["TAVILY_API_KEY"] = "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"
-os.environ["REPLICATE_API_TOKEN"] = "r8_8DyYOzfcOoOCbo26gzSxnPR838ymofz0rJvKK"  # Replace with your actual token
+os.environ["REPLICATE_API_TOKEN"] = ""  # Replace with your actual token
 
 config_list = [
     {
