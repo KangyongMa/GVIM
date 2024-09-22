@@ -56,7 +56,7 @@ llava_config_list = [
     {
         "model": "whatever, will be ignored for remote",
         "api_key": "None",
-        "base_url": "yorickvp/llava-13b:b5f6212d032508382d61ff00469ddda3e32fd8a0e75dc39d8a4191bb742157fb",
+        "base_url": "yorickvp/llava-13b:80537f9eead1a5bfa72d5ac6ea6414379be41d4d4f6679fd776e9535d1eb58bb",
     }
 ]
 
