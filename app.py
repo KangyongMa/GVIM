@@ -25,21 +25,29 @@ def configure():
     web_url_path = data.get('web_url_path', '')
     chemistry_lab = get_chemistry_lab(literature_path)
     logger.info(f"Configured with literature_path: {literature_path}, web_url_path: {web_url_path}")
-    return jsonify({'status': 'Configuration updated'})
+    return jsonify({'status': 'Configuration updated', 'literature_path': literature_path})
 
 @app.route('/simulate', methods=['POST'])
 def simulate():
-    global chemistry_lab, web_url_path
+    global chemistry_lab, web_url_path, literature_path
     if not chemistry_lab:
-        chemistry_lab = get_chemistry_lab()
+        chemistry_lab = get_chemistry_lab(literature_path)
     
     user_input = request.form.get('message', '')
     image_file = request.files.get('image')
-    web_url_path = request.form.get('web_url_path', '')  
+    new_literature_path = request.form.get('literature_path', '')
+    web_url_path = request.form.get('web_url_path', '')
+    
+    logger.info(f"Received request - User input: {user_input}, Literature path: {new_literature_path}, Web URL path: {web_url_path}")
+    
+    # Update literature_path if a new one is provided
+    if new_literature_path and new_literature_path != literature_path:
+        logger.info(f"Updating literature path from {literature_path} to {new_literature_path}")
+        literature_path = new_literature_path
+        chemistry_lab = get_chemistry_lab(literature_path)  # Recreate chemistry_lab with new literature_path
     
     try:
-        image_data = image_file.read() if image_file else None
-        response = chemistry_lab.process_user_input(user_input, image_data, web_url_path=web_url_path)
+        response = chemistry_lab.process_user_input(user_input, image_data=image_file.read() if image_file else None, literature_path=literature_path, web_url_path=web_url_path)
         return jsonify(response)
     except Exception as e:
         logger.error(f"Error processing user input: {str(e)}", exc_info=True)
@@ -54,7 +62,7 @@ def feedback():
     global chemistry_lab
     if not chemistry_lab:
         return jsonify({'error': 'ChemistryLab not configured'}), 400
-    
+
     user_feedback = request.json['feedback']
     logger.info(f"Received feedback: {user_feedback}")
     try:
@@ -78,3 +86,4 @@ def serve_image(filename):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
