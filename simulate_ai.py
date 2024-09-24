@@ -35,8 +35,8 @@ os.environ["REPLICATE_API_TOKEN"] = ""  # Replace with your actual token
 
 config_list = [
     {
-        "model": "llama3-8b-8192",
-        "api_key": "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",
+        "model": "llama3-70b-8192",
+        "api_key": "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",
         "base_url": "https://api.groq.com/openai/v1"
     },
     {
@@ -46,7 +46,7 @@ config_list = [
     },
     {
         "model": "mixtral-8x7b-32768",
-        "api_key": "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",
+        "api_key": "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",
         "base_url": "https://api.groq.com/openai/v1"
     },
 ]
@@ -124,7 +124,7 @@ else:
     embeddings = HuggingFaceEmbeddings()
     db = Chroma.from_documents(texts, embeddings)
 
-llm = ChatOpenAI(model_name="gemma2-9b-it", openai_api_key=config_list[0]["api_key"], openai_api_base=config_list[0]["base_url"])
+llm = ChatOpenAI(model_name="llama3-70b-8192", openai_api_key=config_list[0]["api_key"], openai_api_base=config_list[0]["base_url"])
 rag_chain = RetrievalQA.from_chain_type(
     llm=llm,
     chain_type="stuff",
@@ -152,7 +152,7 @@ def tavily_search(query, url=None):
             response = tavily_client.search(query=f"site:{url} {query}")
         else:
             response = tavily_client.search(query=query)
-        
+
         logger.info(f"Tavily search performed for query: {query}")
         results = [{"url": obj["url"], "content": obj["content"]} for obj in response["results"]]
         return results
@@ -373,58 +373,142 @@ class ChemistryLab:
         self.literature_path = literature_path
         self.setup_agents()
         self.load_documents()
+        self.llm = ChatOpenAI(model_name="llama3-70b-8192", openai_api_key=config_list[0]["api_key"], openai_api_base=config_list[0]["base_url"])
+    
+    def recognize_intent(self, query: str) -> str:
+        prompt = f"""Analyze the following query and determine the most appropriate search strategy:
+        Query: {query}
+        
+        Possible intents:
+        1. Requires real-time updated information (use Tavily search)
+        2. Requires deep information or complex queries in technical, academic, or research fields (use RAG search)
+        3. Requires both real-time and in-depth information (use both Tavily and RAG search)
+        4. Can be answered with existing knowledge (no search required)
+        
+        Respond with only the number of the most appropriate intent."""
+
+        response = self.llm.predict(prompt)
+        return response.strip()
+
+    def process_user_input(self, user_input: str, image_data: Union[bytes, None] = None, literature_path: str = None, web_url_path: str = None) -> List[Dict[str, Any]]:
+        if literature_path and literature_path != self.literature_path:
+            logger.info(f"New literature path detected. Updating from {self.literature_path} to {literature_path}")
+            self.literature_path = literature_path
+            self.load_documents()
+
+        logger.info(f"Processing user input: {user_input}")
+        logger.info(f"Web URL Path: {web_url_path}")
+
+        if not self.groupchat or not self.manager:
+            self.setup_groupchat()
+
+        try:
+            if image_data:
+                llava_response = llava_call(user_input, image_data, llava_config_list[0])
+                user_input = f"{user_input}\n[IMAGE_ANALYSIS:{llava_response}]"
+
+            intent = self.recognize_intent(user_input)
+            logger.info(f"Recognized intent: {intent}")
+
+            search_results = ""
+            if intent == "1":
+                search_results = tavily_search(user_input, url=web_url_path if web_url_path and is_valid_url(web_url_path) else None)
+                search_results = f"[TAVILY_SEARCH:{search_results}]"
+            elif intent == "2":
+                search_results = rag_search(user_input)
+                search_results = f"[RAG_SEARCH:{search_results}]"
+            elif intent == "3":
+                tavily_results = tavily_search(user_input, url=web_url_path if web_url_path and is_valid_url(web_url_path) else None)
+                rag_results = rag_search(user_input)
+                search_results = f"[TAVILY_SEARCH:{tavily_results}]\n[RAG_SEARCH:{rag_results}]"
+            
+            if search_results:
+                user_input = f"{user_input}\n{search_results}"
+
+            chat_result = self.manager.initiate_chat(
+                self.agents[0],
+                message=user_input,
+            )
+
+            chat_history = chat_result.chat_history if hasattr(chat_result, 'chat_history') else chat_result
+
+            processed_messages = []
+            for message in chat_history:
+                logger.info(f"Processing message: {message}")
+                if isinstance(message, dict) and 'role' in message:
+                    if message['role'] == 'human':
+                        processed_messages.append({
+                            'role': 'user',
+                            'name': 'You',
+                            'content': message['content']
+                        })
+                    elif message['role'] == 'assistant':
+                        agent_name = message.get('name', 'AI Assistant')
+                        processed_content = process_smiles_in_text(message['content'])
+                        processed_messages.append({
+                            'role': 'assistant',
+                            'name': agent_name,
+                            'content': processed_content
+                        })
+                else:
+                    logger.warning(f"Unexpected message format: {message}")
+
+            for agent in self.agents:
+                agent.evolve()
+
+            logger.info(f"Generated responses: {json.dumps(processed_messages, indent=2)}")
+            return processed_messages
+        except Exception as e:
+            logger.error(f"Error processing user input: {str(e)}", exc_info=True)
+            return [{
+                'role': 'assistant',
+                'name': 'System',
+                'content': f"Error processing your input: {str(e)}"
+            }]
 
     def load_documents(self):
+        logger.info(f"Loading documents. Literature path: {self.literature_path}")
+        
         # Load experiment data
         experiment_data = load_documents("E://HuaweiMoveData//Users//makangyong//Desktop//output.txt")
+        logger.info(f"Loaded {len(experiment_data)} experiment documents")
 
         # Load literature (if available)
-        literature = load_documents(self.literature_path) if self.literature_path else []
+        literature = []
+        if self.literature_path:
+            if os.path.exists(self.literature_path):
+                literature = load_documents(self.literature_path)
+                logger.info(f"Loaded {len(literature)} literature documents from {self.literature_path}")
+            else:
+                logger.warning(f"Literature path does not exist: {self.literature_path}")
 
         # Combine all documents
         all_documents = experiment_data + literature
+        logger.info(f"Total documents loaded: {len(all_documents)}")
 
         # Check if we have any documents before proceeding
         if not all_documents:
             logger.warning("No documents loaded. Skipping embedding and vector store creation.")
             self.db = None
         else:
-            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-            texts = text_splitter.split_documents(all_documents)
+            try:
+                text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+                texts = text_splitter.split_documents(all_documents)
+                logger.info(f"Split documents into {len(texts)} chunks")
 
-            embeddings = HuggingFaceEmbeddings()
-            self.db = Chroma.from_documents(texts, embeddings)
-
-    def setup_agents(self):
-        agent_configs = [
-            ("Lab_Director", "You are the director of a chemistry laboratory. Assign tasks, ask questions about chemical experiments, and oversee the research process."),
-            ("Senior_Chemist", "You are a senior chemist with expertise in organic, inorganic, and physical chemistry. Provide detailed answers and insights on complex chemical processes."),
-            ("Lab_Manager", "You are a laboratory manager responsible for overseeing chemical experiments, ensuring safety protocols, and managing resources. Plan and design projects with efficiency and safety in mind."),
-            ("Safety_Officer", "You are a chemical safety officer responsible for reviewing experimental procedures and ensuring compliance with safety regulations. Provide feedback on safety measures and potential hazards."),
-            ("Analytical_Chemist", "You are an analytical chemist specializing in chemical analysis techniques and instrumentation. Provide expertise on analytical methods, data interpretation, and quality control.")
-        ]
-
-        for name, system_message in agent_configs:
-            agent = ChemistryAgent(name=name, system_message=system_message, llm_config=agent_llm_config)
-            self.agents.append(agent)
-            agent.register_function(
-                function_map={
-                    "rag_search": rag_search,
-                    "tavily_search": tavily_search
-                }
-            )
-
-    def setup_groupchat(self):
-        self.groupchat = autogen.GroupChat(
-            agents=self.agents,
-            messages=[],
-            max_round=10,
-            speaker_selection_method="round_robin",
-            allow_repeat_speaker=False,
-        )
-        self.manager = autogen.GroupChatManager(groupchat=self.groupchat, llm_config=manager_llm_config)
+                embeddings = HuggingFaceEmbeddings()
+                self.db = Chroma.from_documents(texts, embeddings)
+                logger.info("Successfully created Chroma vector store")
+            except Exception as e:
+                logger.error(f"Error creating vector store: {str(e)}", exc_info=True)
+                self.db = None
 
     def process_user_input(self, user_input, image_data=None, literature_path=None, web_url_path=None):
+        if literature_path and literature_path != self.literature_path:
+            logger.info(f"New literature path detected. Updating from {self.literature_path} to {literature_path}")
+            self.literature_path = literature_path
+            self.load_documents()  # Reload documents when literature_path changes
+
         logger.info(f"Processing user input: {user_input}")
         logger.info(f"Web URL Path: {web_url_path}")
 
@@ -515,6 +599,35 @@ class ChemistryLab:
                 if shared_knowledge:
                     sharing_partner.learn(shared_knowledge)
                     logger.info(f"{agent.name} shared knowledge '{shared_knowledge}' with {sharing_partner.name}")
+
+    def setup_agents(self):
+        agent_configs = [
+            ("Lab_Director", "You are the director of a chemistry laboratory. Assign tasks, ask questions about chemical experiments, and oversee the research process."),
+            ("Senior_Chemist", "You are a senior chemist with expertise in organic, inorganic, and physical chemistry. Provide detailed answers and insights on complex chemical processes."),
+            ("Lab_Manager", "You are a laboratory manager responsible for overseeing chemical experiments, ensuring safety protocols, and managing resources. Plan and design projects with efficiency and safety in mind."),
+            ("Safety_Officer", "You are a chemical safety officer responsible for reviewing experimental procedures and ensuring compliance with safety regulations. Provide feedback on safety measures and potential hazards."),
+            ("Analytical_Chemist", "You are an analytical chemist specializing in chemical analysis techniques and instrumentation. Provide expertise on analytical methods, data interpretation, and quality control.")
+        ]
+
+        for name, system_message in agent_configs:
+            agent = ChemistryAgent(name=name, system_message=system_message, llm_config=agent_llm_config)
+            self.agents.append(agent)
+            agent.register_function(
+                function_map={
+                    "rag_search": rag_search,
+                    "tavily_search": tavily_search
+                }
+            )
+
+    def setup_groupchat(self):
+        self.groupchat = autogen.GroupChat(
+            agents=self.agents,
+            messages=[],
+            max_round=10,
+            speaker_selection_method="round_robin",
+            allow_repeat_speaker=False,
+        )
+        self.manager = autogen.GroupChatManager(groupchat=self.groupchat, llm_config=manager_llm_config)
 
 def get_chemistry_lab(literature_path=""):
     return ChemistryLab(literature_path)
