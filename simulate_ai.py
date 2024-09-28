@@ -30,13 +30,13 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-os.environ["TAVILY_API_KEY"] = "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"
-os.environ["REPLICATE_API_TOKEN"] = ""  # Replace with your actual token
+os.environ["TAVILY_API_KEY"] = "your_key"
+os.environ["REPLICATE_API_TOKEN"] = "your_key"  # Replace with your actual token
 
 config_list = [
     {
         "model": "llama3-70b-8192",
-        "api_key": "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",
+        "api_key": "your_key",
         "base_url": "https://api.groq.com/openai/v1"
     },
     {
@@ -46,7 +46,7 @@ config_list = [
     },
     {
         "model": "mixtral-8x7b-32768",
-        "api_key": "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",
+        "api_key": "your_key",
         "base_url": "https://api.groq.com/openai/v1"
     },
 ]
