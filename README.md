@@ -8,6 +8,12 @@
 
 This project involves fine-tuning open-source large language models with chemical science data, evaluated using a specialized automated scoring system. The resulting chemical intelligent assistant system utilizes the fine-tuned Mistral Nemo model and can flexibly incorporate various advanced models. It integrates chemistry-specific features like molecular visualization and literature retrieval, while also possessing autonomous evolution capabilities through knowledge accumulation, skill acquisition, and collaborative mechanisms. This approach enables continuous optimization of the system's professional abilities and interaction quality, overcoming limitations of traditional static AI systems in the chemistry domain.
 
+## 📹 Project Demo Video
+
+Click on the image below to watch our project demonstration video:
+
+[![Nature Chemistry latest reports](Nature Chemistry latest reports.png)](Nature Chemistry latest reports.mp4)
+
 ## 🌟 Key Features
 
 ### Fine-tuning Large Language Models Based on Chemistry Domain Data
@@ -31,21 +37,18 @@ This project involves fine-tuning open-source large language models with chemica
 
 ## 🧬 Key Additions:
 1. **Configuration Section**: Added instructions for setting the file path and managing API usage limits.
-2. **File Path Update**: Explicitly mentioned to update the file path based on the user’s local setup.
+2. **File Path Update**: Explicitly mentioned to update the file path based on the user's local setup.
 3. **API Usage Limits**: Provided a reminder about API call limits to ensure users are aware and can plan their usage accordingly.
-4. ## API Key Setup
 
+## API Key Setup
 Ensure that you have configured the necessary API keys in your local environment before running the project. The following keys need to be manually set up:
-
 - `TAVILY_API_KEY`
 - `REPLICATE_API_TOKEN`
 - `Groq_API_KEY`
 
-
 ## 📋 Requirements
 
 ### Installation
-
 ```bash
 # Create and activate a new conda environment
 conda create -n gvim python=3.9.19
@@ -53,23 +56,27 @@ conda activate gvim
 
 # Install required packages
 pip install -r requirements.txt
+
 # Run it
 python app.py
 ```
 
 ---
-### citation
+
+### Citation
+```json
 {
   "name": "Kangyong Ma",
   "affiliation": {
     "institution": "College of Physics and Electronic Information Engineering, Zhejiang Normal University",
     "city": "Jinhua City",
     "postalCode": "321000",
-    "country": "China"
-    "DOI":"10.26434/chemrxiv-2024-6tv8c"
+    "country": "China",
+    "DOI": "10.26434/chemrxiv-2024-6tv8c"
   },
   "email": [
     "kangyongma@outlook.com",
     "kangyongma@gmail.com"
   ]
 }
+```
