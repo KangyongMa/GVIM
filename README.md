@@ -12,7 +12,7 @@ This project involves fine-tuning open-source large language models with chemica
 
 Click on the image below to watch our project demonstration video:
 
-[![Nature Chemistry latest reports](Nature Chemistry latest reports.png)](Nature Chemistry latest reports.mp4)
+[![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Nature%20Chemistry%20latest%20reports.png)](<video controls src="https://github.com/KangyongMa/GVIM/blob/main/Nature%20Chemistry%20latest%20reports.mp4" title="Nature Chemistry latest reports.mp4"></video>)
 
 ## 🌟 Key Features
 
