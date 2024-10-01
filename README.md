@@ -12,13 +12,14 @@ This project involves fine-tuning open-source large language models with chemica
 
 Click on the image below to watch our project demonstration video:
 
--[Usage example](https://github.com/KangyongMa/GVIM/blob/main/Usage%20example.mp4)
--[Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Nature%20Chemistry%20latest%20reports.mp4)
--[Multimodal Large Model Test Demonstration Video](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20Large%20Model%20Test%20Demonstration%20Video..mp4)
--[Demonstration of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
--[Demonstration of precise answers based on RAG](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20precise%20answers%20based%20on%20RAG.mp4)
--[Demonstration of the conversion between New Chat and History Chat.](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat..mp4)
--[Search for Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/Search%20for%20Digital%20Discovery.mp4)
+[Usage example](https://github.com/KangyongMa/GVIM/blob/main/Usage%20example.mp4)
+
+[Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Nature%20Chemistry%20latest%20reports.mp4)
+[Multimodal Large Model Test Demonstration Video](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20Large%20Model%20Test%20Demonstration%20Video..mp4)
+[Demonstration of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
+[Demonstration of precise answers based on RAG](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20precise%20answers%20based%20on%20RAG.mp4)
+[Demonstration of the conversion between New Chat and History Chat.](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat..mp4)
+[Search for Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/Search%20for%20Digital%20Discovery.mp4)
 
 ## 🌟 Key Features
 
