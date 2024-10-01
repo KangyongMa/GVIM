@@ -13,31 +13,31 @@ This project involves fine-tuning open-source large language models with chemica
 Click on the image below to watch our project demonstration video:
 
 ### Usage example
-![Usage example](https://github.com/KangyongMa/GVIM/blob/main/Usage%20example.png)
+![Usage example](https://github.com/KangyongMa/GVIM/blob/main/picture/Usage%20example.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Usage%20example.mp4)
 
 ### Nature Chemistry latest reports
-![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Nature%20Chemistry%20latest%20reports.png)
+![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/picture/Nature%20Chemistry%20latest%20reports.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Nature%20Chemistry%20latest%20reports.mp4)
 
 ### Multimodal Large Model Test Demonstration Video
-![Multimodal Large Model Test Demonstration Video](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20Large%20Model%20Test%20Demonstration%20Video.png)
+![Multimodal Large Model Test Demonstration Video](https://github.com/KangyongMa/GVIM/blob/main/picture/Multimodal%20Large%20Model%20Test%20Demonstration%20Video..png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20Large%20Model%20Test%20Demonstration%20Video..mp4)
 
 ### Demonstration of an intelligent system based on local document knowledge
-![Demonstration of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
+![Demonstration of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
 ### Demonstration of precise answers based on RAG
-![Demonstration of precise answers based on RAG](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20precise%20answers%20based%20on%20RAG.png)
+![Demonstration of precise answers based on RAG](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20precise%20answers%20based%20on%20RAG.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20precise%20answers%20based%20on%20RAG.mp4)
 
 ### Demonstration of the conversion between New Chat and History Chat
-![Demonstration of the conversion between New Chat and History Chat](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat.png)
+![Demonstration of the conversion between New Chat and History Chat](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat..png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat..mp4)
 
 ### Search for Digital Discovery
-![Search for Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/Search%20for%20Digital%20Discovery.png)
+![Search for Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/picture/Search%20for%20Digital%20Discovery.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Search%20for%20Digital%20Discovery.mp4)
 
 ## 🌟 Key Features
@@ -106,3 +106,4 @@ python app.py
   ]
 }
 ```
+
