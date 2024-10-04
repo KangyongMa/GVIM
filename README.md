@@ -30,8 +30,8 @@ Click on the image below to watch our project demonstration video:
 
 ### Demonstration of precise answers based on RAG
 ![Demonstration of precise answers based on RAG](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20precise%20answers%20based%20on%20RAG.png)
-[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20precise%20answers%20based%20on%20RAG.mp4)
-(https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20answers%20based%20on%20RAG.mp4)
+[Watch Video1](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20precise%20answers%20based%20on%20RAG.mp4)
+[Watch Video2](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20answers%20based%20on%20RAG.mp4)
 
 ### Demonstration of the conversion between New Chat and History Chat
 ![Demonstration of the conversion between New Chat and History Chat](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat..png)
