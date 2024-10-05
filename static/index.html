@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chemistry Lab AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
@@ -178,6 +179,95 @@
         .feedback-button:hover {
             transform: translateY(-2px);
         }
+
+        .search-results {
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid #d1d5db;
+        }
+
+        .search-result {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .search-result:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .search-result-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-result-url {
+            color: #4b5563;
+            font-size: 0.9em;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .search-result-content {
+            color: #1f2937;
+            font-size: 0.95em;
+        }
+
+        .search-result-summary {
+            color: #4b5563;
+            font-size: 0.9em;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .search-result-actions {
+            margin-top: 0.5rem;
+        }
+
+        .search-result-action {
+            background-color: #e5e7eb;
+            color: #4b5563;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-result-action:hover {
+            background-color: #d1d5db;
+        }
+
+        .chat-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .chat-control-btn {
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 0.5rem;
+        }
+
+        .chat-control-btn:hover {
+            background-color: #2d3748;
+        }
     </style>
 </head>
 <body>
@@ -187,6 +277,10 @@
             <div id="agent-status">
                 <!-- Agent status will be dynamically populated here -->
             </div>
+            <div class="chat-controls">
+                <button class="chat-control-btn bg-green-500 hover:bg-green-600 text-white" onclick="newChat()"><i class="fas fa-plus"></i> New Chat</button>
+                <button class="chat-control-btn bg-blue-500 hover:bg-blue-600 text-white" onclick="historyChat()"><i class="fas fa-history"></i> History Chat</button>
+            </div>
         </div>
         <div class="main-content">
             <div class="chat-header">Chemistry Lab AI</div>
@@ -194,15 +288,15 @@
             <div class="input-area">
                 <div class="input-row">
                     <input type="text" id="user-input" placeholder="Type your message here...">
-                    <button id="send-btn">Send</button>
+                    <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
                 </div>
                 <div class="input-row">
                     <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="updateImageName()">
-                    <button class="option-btn" onclick="document.getElementById('image-upload').click()">Upload Image</button>
+                    <button class="option-btn" onclick="document.getElementById('image-upload').click()"><i class="fas fa-image"></i> Upload Image</button>
                     <span id="image-name"></span>
-                    <button class="option-btn" onclick="toggleOption('literature')">Set Literature Path</button>
+                    <button class="option-btn" onclick="toggleOption('literature')"><i class="fas fa-book"></i> Set Literature Path</button>
                     <input type="text" id="literature-path" class="option-input" placeholder="Enter Literature Path">
-                    <button class="option-btn" onclick="toggleOption('web-url')">Set Web URL Path</button>
+                    <button class="option-btn" onclick="toggleOption('web-url')"><i class="fas fa-globe"></i> Set Web URL Path</button>
                     <input type="text" id="web-url-path" class="option-input" placeholder="Enter Web URL Path">
                 </div>
             </div>
@@ -247,7 +341,7 @@
 
         updateAgentStatus();
 
-        function addMessage(role, name, content, imageUrl = null) {
+        function addMessage(role, name, content, imageData = null, searchResults = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}`;
             const avatarSrc = avatars[name] || '/static/images/system-avatar.png';
@@ -258,9 +352,34 @@
                     <div>${content}</div>
             `;
 
-            if (imageUrl) {
-                console.log("Adding image to message:", imageUrl);
-                messageContent += `<img src="${imageUrl}" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px;" onerror="console.error('Image failed to load:', this.src);">`;
+            if (imageData) {
+                console.log("Adding image to message:", imageData ? imageData.slice(0, 50) + "..." : "No image data");
+                messageContent += `<img src="${imageData}" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px;">`;
+            }
+
+            if (searchResults && searchResults.length > 0) {
+                messageContent += `
+                <div class="search-results">
+                    <h3 class="text-lg font-bold mb-2">Web Search Results:</h3>
+                    ${searchResults.map((result, index) => `
+                        <div class="search-result">
+                            <div class="search-result-title">
+                                ${index + 1}. <a href="${result.url}" target="_blank">${result.title || 'Untitled'}</a>
+                            </div>
+                            <div class="search-result-url">
+                                <a href="${result.url}" target="_blank">${result.url}</a>
+                            </div>
+                            <div class="search-result-content">${result.content}</div>
+                            <div class="search-result-summary">
+                                Summary: ${result.summary || 'No summary available.'}
+                            </div>
+                            <div class="search-result-actions">
+                                <button class="search-result-action" onclick="copyToClipboard('${result.url}')">Copy URL</button>
+                                <button class="search-result-action" onclick="toggleSummary(${index})">Toggle Summary</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
             }
 
             messageContent += `</div>`;
@@ -272,9 +391,9 @@
                 const feedbackDiv = document.createElement('div');
                 feedbackDiv.className = 'feedback-buttons';
                 feedbackDiv.innerHTML = `
-                    <button class="feedback-button bg-green-500 text-white" onclick="provideFeedback('good')">👍 Good</button>
-                    <button class="feedback-button bg-yellow-500 text-white" onclick="provideFeedback('average')">👌 Average</button>
-                    <button class="feedback-button bg-red-500 text-white" onclick="provideFeedback('poor')">👎 Poor</button>
+                    <button class="feedback-button bg-green-500 text-white" onclick="provideFeedback('good')"><i class="fas fa-thumbs-up"></i> Good</button>
+                    <button class="feedback-button bg-yellow-500 text-white" onclick="provideFeedback('average')"><i class="fas fa-meh"></i> Average</button>
+                    <button class="feedback-button bg-red-500 text-white" onclick="provideFeedback('poor')"><i class="fas fa-thumbs-down"></i> Poor</button>
                 `;
                 chatMessages.appendChild(feedbackDiv);
             }
@@ -345,9 +464,16 @@
                     console.log("Received data:", data);
 
                     if (Array.isArray(data)) {
-                        data.forEach(msg => {
+                        for (const msg of data) {
                             if (msg.role === 'assistant') {
-                                addMessage('assistant', msg.name || 'AI', msg.content);
+                                if (msg.search_results) {
+                                    // Generate summaries for each search result
+                                    msg.search_results = await Promise.all(msg.search_results.map(async (result) => {
+                                        result.summary = await generateSummary(result.content);
+                                        return result;
+                                    }));
+                                }
+                                addMessage('assistant', msg.name || 'AI', msg.content, null, msg.search_results);
                                 const agent = agents.find(a => a.name === msg.name);
                                 if (agent && Math.random() > 0.7) {
                                     agent.evolutionLevel = Math.min(agent.evolutionLevel + 1, 5);
@@ -355,7 +481,7 @@
                                     addMessage('system', 'System', `${agent.name.replace('_', ' ')} has evolved to level ${agent.evolutionLevel}!`);
                                 }
                             }
-                        });
+                        }
                     } else {
                         console.error("Unexpected response format:", data);
                         addMessage('assistant', 'System', 'Received an unexpected response from the server.');
@@ -393,6 +519,69 @@
             } catch (error) {
                 console.error('Error sending feedback:', error);
                 addMessage('system', 'System', 'An error occurred while sending your feedback.');
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('URL copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        function toggleSummary(index) {
+            const summaryElement = document.querySelectorAll('.search-result-summary')[index];
+            summaryElement.style.display = summaryElement.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function generateSummary(content) {
+            // This is a placeholder. In a real implementation, you would send this to your backend for processing.
+            // For now, we'll just return a truncated version of the content.
+            return content.length > 200 ? content.slice(0, 200) + '...' : content;
+        }
+
+        function newChat() {
+            // Clear the chat messages and reset the input fields
+            chatMessages.innerHTML = '';
+            userInput.value = '';
+            imageUpload.value = '';
+            imageName.textContent = '';
+            literaturePath.value = '';
+            webUrlPath.value = '';
+            literaturePath.style.display = 'none';
+            webUrlPath.style.display = 'none';
+        }
+
+        async function historyChat() {
+            try {
+                const response = await fetch('/history', {
+                    method: 'GET',
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("History chat data:", data);
+
+                // Clear the chat messages
+                chatMessages.innerHTML = '';
+
+                // Display the chat history
+                data.forEach(chat => {
+                    addMessage('user', 'User', chat.user_input, chat.image_data);
+                    chat.response.forEach(msg => {
+                        if (msg.role === 'assistant') {
+                            addMessage('assistant', msg.name || 'AI', msg.content, null, msg.search_results);
+                        }
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error fetching chat history:', error);
+                addMessage('system', 'System', 'An error occurred while fetching chat history.');
             }
         }
 
