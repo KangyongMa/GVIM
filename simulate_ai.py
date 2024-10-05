@@ -30,23 +30,23 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-os.environ["TAVILY_API_KEY"] = "your_key"
-os.environ["REPLICATE_API_TOKEN"] = "your_key"  # Replace with your actual token
+os.environ["TAVILY_API_KEY"] = "your_api key"
+os.environ["REPLICATE_API_TOKEN"] = "your_api key"  # Replace with your actual token
 
 config_list = [
     {
         "model": "llama3-70b-8192",
-        "api_key": "your_key",
+        "api_key": "your_api key",
         "base_url": "https://api.groq.com/openai/v1"
     },
     {
-        "model": "MistralNemo",
-        "api_key": "NA",
-        "base_url": "https://77bc-34-125-119-159.ngrok-free.app/v1"
+        "model": "gemma2-9b-it",
+        "api_key": "your_api key",
+        "base_url": "https://api.groq.com/openai/v1"
     },
     {
         "model": "mixtral-8x7b-32768",
-        "api_key": "your_key",
+        "api_key": "your_api key",
         "base_url": "https://api.groq.com/openai/v1"
     },
 ]
@@ -104,7 +104,7 @@ def load_documents(file_path):
     return loader.load()
 
 # Load experiment data
-experiment_data = load_documents("E://HuaweiMoveData//Users//makangyong//Desktop//output.txt")
+experiment_data = load_documents("your_path")
 
 # Load literature (if available)
 literature_path = ""  # Update this path if you have literature to load
@@ -148,13 +148,19 @@ def tavily_search(query, url=None):
         if tavily_client is None:
             return fallback_search(query)
 
+        search_params = {
+            "query": query,
+            "search_depth": "advanced",
+            "max_results": 5,
+        }
+
         if url and is_valid_url(url):
-            response = tavily_client.search(query=f"site:{url} {query}")
-        else:
-            response = tavily_client.search(query=query)
+            search_params["include_domains"] = [url]
+
+        response = tavily_client.search(**search_params)
 
         logger.info(f"Tavily search performed for query: {query}")
-        results = [{"url": obj["url"], "content": obj["content"]} for obj in response["results"]]
+        results = [{"url": obj["url"], "title": obj["title"], "content": obj["content"]} for obj in response["results"]]
         return results
     except Exception as e:
         logger.error(f"Error performing Tavily search: {str(e)}")
@@ -257,6 +263,35 @@ def process_smiles_in_text(text: str) -> str:
             return smiles  # Return original text if there's an error
 
     return re.sub(smiles_pattern, replace_with_image, text)
+
+def summarize_search_results(results, query):
+    summary = f"Based on the search for '{query}', here are the key findings:\n\n"
+    for i, result in enumerate(results, 1):
+        summary += f"{i}. <a href='{result['url']}' target='_blank'>{result['title']}</a>\n"
+        summary += f"   {result['content'][:200]}...\n\n"
+    return summary
+
+def process_search_results(search_results):
+    if isinstance(search_results, str):
+        try:
+            search_results = json.loads(search_results)
+        except json.JSONDecodeError:
+            return [{"content": search_results, "url": "N/A", "title": "Search Result"}]
+
+    if isinstance(search_results, list):
+        return [{
+            "content": result.get("content", ""),
+            "url": result.get("url", "N/A"),
+            "title": result.get("title", "Search Result")
+        } for result in search_results]
+    elif isinstance(search_results, dict):
+        return [{
+            "content": search_results.get("content", ""),
+            "url": search_results.get("url", "N/A"),
+            "title": search_results.get("title", "Search Result")
+        }]
+    else:
+        return [{"content": str(search_results), "url": "N/A", "title": "Search Result"}]
 
 class ChemistryAgent(autogen.AssistantAgent):
     def __init__(self, name, *args, **kwargs):
@@ -373,18 +408,18 @@ class ChemistryLab:
         self.literature_path = literature_path
         self.setup_agents()
         self.load_documents()
-        self.llm = ChatOpenAI(model_name="llama3-70b-8192", openai_api_key=config_list[0]["api_key"], openai_api_base=config_list[0]["base_url"])
-    
+        self.llm = ChatOpenAI(model_name="llama3-70b-8192", openai_api_key=config_list[1]["api_key"], openai_api_base=config_list[1]["base_url"])
+
     def recognize_intent(self, query: str) -> str:
         prompt = f"""Analyze the following query and determine the most appropriate search strategy:
         Query: {query}
-        
+
         Possible intents:
         1. Requires real-time updated information (use Tavily search)
         2. Requires deep information or complex queries in technical, academic, or research fields (use RAG search)
         3. Requires both real-time and in-depth information (use both Tavily and RAG search)
         4. Can be answered with existing knowledge (no search required)
-        
+
         Respond with only the number of the most appropriate intent."""
 
         response = self.llm.predict(prompt)
@@ -421,7 +456,7 @@ class ChemistryLab:
                 tavily_results = tavily_search(user_input, url=web_url_path if web_url_path and is_valid_url(web_url_path) else None)
                 rag_results = rag_search(user_input)
                 search_results = f"[TAVILY_SEARCH:{tavily_results}]\n[RAG_SEARCH:{rag_results}]"
-            
+
             if search_results:
                 user_input = f"{user_input}\n{search_results}"
 
@@ -468,7 +503,7 @@ class ChemistryLab:
 
     def load_documents(self):
         logger.info(f"Loading documents. Literature path: {self.literature_path}")
-        
+
         # Load experiment data
         experiment_data = load_documents("E://HuaweiMoveData//Users//makangyong//Desktop//output.txt")
         logger.info(f"Loaded {len(experiment_data)} experiment documents")
@@ -526,7 +561,10 @@ class ChemistryLab:
             else:
                 search_result = tavily_search(user_input)
 
-            user_input = f"{user_input}\n[WEB_SEARCH:{search_result}]"
+            if search_result:
+                processed_results = process_search_results(search_result)
+                summary = summarize_search_results(processed_results, user_input)
+                user_input = f"{user_input}\n[WEB_SEARCH_SUMMARY:{summary}]"
 
             chat_result = self.manager.initiate_chat(
                 self.agents[0],
