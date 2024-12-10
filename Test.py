@@ -11,6 +11,28 @@ from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from nltk.tokenize import word_tokenize
 from rouge import Rouge
 import textstat
+from matplotlib import font_manager
+import matplotlib as mpl
+
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.serif'] = ['Times New Roman']
+plt.rcParams['axes.unicode_minus'] = False
+
+title_font = {'family': 'Times New Roman',
+              'weight': 'bold',
+              'size': 14}
+
+label_font = {'family': 'Times New Roman',
+              'weight': 'normal',
+              'size': 12}
+
+tick_font = {'family': 'Times New Roman',
+             'weight': 'normal',
+             'size': 10}
+
+legend_font = {'family': 'Times New Roman',
+               'weight': 'normal',
+               'size': 10}
 
 try:
     import Levenshtein
@@ -62,30 +84,33 @@ class OptimizedModelEvaluator:
 
     def calculate_numeric_accuracy(self, response, correct_answer):
         try:
-            response_value, response_unit = self.extract_numeric_value_and_unit(response)
+            response_value, response_unit = self.extract_numeric_value_and_unit(response) 
             correct_value, correct_unit = self.extract_numeric_value_and_unit(correct_answer)
 
             if response_value is None or correct_value is None:
                 return 0.1
 
+            # Add sophisticated unit conversion 
             if response_unit != correct_unit:
                 response_value = self.convert_to_standard_unit(response_value, response_unit, correct_unit)
 
+            # Handle special cases for very small values
             if abs(correct_value) < 1e-10:
                 return 1 if abs(response_value) < 1e-10 else 0.1
 
+            # Calculate relative error with weighted bands
             relative_error = abs(response_value - correct_value) / abs(correct_value)
-            
+
             if relative_error == 0:
-                return 1.0
+                return 1.0  # Perfect match
             elif relative_error < 0.01:
-                return 0.9
+                return 0.9  # Within 1% error 
             elif relative_error < 0.1:
-                return 0.7
+                return 0.7  # Within 10% error
             elif relative_error < 0.5:
-                return 0.5
+                return 0.5  # Within 50% error
             elif relative_error < 1:
-                return 0.3
+                return 0.3  # Within 100% error
             else:
                 return max(0.1, 1 - min(1, np.log10(relative_error + 1) / 2))
 
@@ -98,14 +123,37 @@ class OptimizedModelEvaluator:
         text_lower = text.lower()
         question_lower = question.lower()
         
-        for keyword, importance in self.keyword_importance.items():
-            if keyword.lower() in text_lower:
-                score += importance
+        # Weight different types of chemical terms
+        weights = {
+            'reaction_terms': 2.0,
+            'structure_terms': 1.5,
+            'property_terms': 1.0,
+            'general_terms': 0.5
+        }
         
-        for term in self.chemical_terms:
+        # Define term categories
+        chemical_terms = {
+            'reaction_terms': ['catalyst', 'synthesis', 'yield', 'mechanism'],
+            'structure_terms': ['bond', 'orbital', 'molecule', 'atom'],
+            'property_terms': ['energy', 'temperature', 'pressure', 'concentration'],
+            'general_terms': ['compound', 'solution', 'mixture']
+        }
+        
+        # Score each category
+        for category, terms in chemical_terms.items():
+            category_score = 0
+            for term in terms:
+                if term in text_lower:
+                    category_score += 1
+            score += (category_score / len(terms)) * weights[category]
+            
+        # Context matching bonus
+        context_bonus = 0
+        for term in chemical_terms['reaction_terms']:
             if term in question_lower and term in text_lower:
-                score += 0.5
-        
+                context_bonus += 0.5
+                
+        score = (score + context_bonus) / sum(weights.values())
         return min(score, 1)
 
     def calculate_similarity(self, answer, correct_answer):
@@ -164,15 +212,19 @@ class OptimizedModelEvaluator:
         return (precision_score + length_score) / 2
 
     def calculate_factual_accuracy(self, response, correct_answer, question):
+        # Base similarity score
         similarity = self.calculate_similarity(response, correct_answer)
         
+        # Chemical property specific checks
         if any(term in question.lower() for term in ['lumo', 'homo', 'orbital', 'energy']):
             response_value, _ = self.extract_numeric_value_and_unit(response)
             correct_value, _ = self.extract_numeric_value_and_unit(correct_answer)
             if response_value is not None and correct_value is not None:
+                # Reward correct sign of energy values
                 if (response_value < 0) == (correct_value < 0):
                     similarity += 0.2
         
+        # MOF structure specific checks
         elif 'mof' in question.lower():
             important_parts = ['linker', 'node', 'topology']
             for part in important_parts:
@@ -292,174 +344,152 @@ class OptimizedModelEvaluator:
         se = np.std(data, ddof=1) / np.sqrt(n)  # Use standard error
         return min(se, 0.5)  # Limit maximum error value to 0.5
 
+    def plot_performance_distribution(self, results, ax, colors):
+        """Plot performance distribution using violin plots"""
+        model_scores = []
+        labels = []
+        
+        for model in self.models:
+            scores = [score['final_score'] for result in results['individual_results']
+                     for model_name, score in result['model_scores'].items() if model_name == model]
+            model_scores.append(scores)
+            labels.append(model)
+        
+        parts = ax.violinplot(model_scores, points=100, showmeans=True)
+        
+        # Customize violin plots
+        for i, pc in enumerate(parts['bodies']):
+            pc.set_facecolor(colors[i % len(colors)])
+            pc.set_alpha(0.7)
+        
+        parts['cmeans'].set_color('black')
+        parts['cmeans'].set_linewidth(1.5)
+        
+        ax.set_xticks(range(1, len(labels) + 1))
+        ax.tick_params(axis='both', which='major', labelsize=10)
+        ax.set_xticklabels(labels, rotation=45, ha='right')
+        
+        ax.set_ylabel('Score Distribution', fontfamily='Times New Roman', fontsize=12)
+        ax.set_title('(a) Model Performance Distribution', fontfamily='Times New Roman', 
+                     fontweight='bold', fontsize=14, pad=20)
+        
+        # Add mean values as text
+        for i, scores in enumerate(model_scores, 1):
+            mean = np.mean(scores)
+            ax.text(i, ax.get_ylim()[1], f'{mean:.2f}',
+                    ha='center', va='bottom', fontfamily='Times New Roman', fontsize=10)
+
+    def plot_enhanced_type_performance(self, results, ax, colors):
+        """Plot enhanced type performance using grouped box plots"""
+        positions = []
+        data = []
+        labels = []
+        
+        for i, qtype in enumerate(self.question_types):
+            for j, model in enumerate(self.models):
+                scores = [result['model_scores'][model]['final_score']
+                         for result in results['individual_results']
+                         if result['question_type'] == qtype]
+                pos = i + j/(len(self.models) + 1)
+                positions.append(pos)
+                data.append(scores)
+                labels.append(model if i == 0 else '')
+        
+        bplot = ax.boxplot(data, positions=positions, patch_artist=True,
+                          widths=0.1, medianprops=dict(color="black"))
+        
+        for i, patch in enumerate(bplot['boxes']):
+            patch.set_facecolor(colors[i % len(self.models)])
+            patch.set_alpha(0.7)
+        
+        ax.set_xticks([i + 0.5 for i in range(len(self.question_types))])
+        ax.tick_params(axis='both', which='major', labelsize=10)
+        ax.set_xticklabels(self.question_types, fontfamily='Times New Roman', fontsize=10)
+        ax.set_ylabel('Performance Score', fontfamily='Times New Roman', fontsize=12)
+        ax.set_title('(b) Performance by Question Type', fontfamily='Times New Roman',
+                     fontweight='bold', fontsize=14, pad=20)
+        
+        handles = [plt.Rectangle((0,0),1,1, facecolor=colors[i], alpha=0.7)
+                   for i in range(len(self.models))]
+        ax.legend(handles, self.models, loc='upper right', bbox_to_anchor=(1.15, 1),
+                 prop={'family': 'Times New Roman', 'size': 10})
+
+    def plot_criteria_heatmap(self, results, ax):
+        """Plot criteria correlation heatmap"""
+        criteria = list(results['model_criteria_scores'][self.models[0]].keys())
+        correlation_matrix = np.zeros((len(criteria), len(criteria)))
+        
+        for i, c1 in enumerate(criteria):
+            for j, c2 in enumerate(criteria):
+                scores1 = []
+                scores2 = []
+                for model in self.models:
+                    for result in results['individual_results']:
+                        if c1 in result['model_scores'][model]['criteria_scores'] and \
+                           c2 in result['model_scores'][model]['criteria_scores']:
+                            scores1.append(result['model_scores'][model]['criteria_scores'][c1])
+                            scores2.append(result['model_scores'][model]['criteria_scores'][c2])
+                if scores1 and scores2:
+                    correlation_matrix[i, j] = np.corrcoef(scores1, scores2)[0, 1]
+        
+        sns.heatmap(correlation_matrix, annot=True, cmap='RdBu_r', center=0,
+                    xticklabels=criteria, yticklabels=criteria, ax=ax,
+                    annot_kws={'size': 8})
+        ax.tick_params(axis='both', which='major', labelsize=10)
+        ax.set_xticklabels(criteria, rotation=45, ha='right')
+        ax.set_yticklabels(criteria, rotation=0)
+        ax.set_title('(c) Criteria Correlation Matrix', fontfamily='Times New Roman',
+                     fontweight='bold', fontsize=14, pad=20)
+
+    def plot_criteria_radar(self, results, ax, colors):
+        """Plot radar chart for criteria comparison"""
+        criteria = list(results['model_criteria_scores'][self.models[0]].keys())
+        angles = np.linspace(0, 2*np.pi, len(criteria), endpoint=False)
+        angles = np.concatenate((angles, [angles[0]]))
+        
+        for i, model in enumerate(self.models):
+            values = [results['model_criteria_scores'][model][criterion] for criterion in criteria]
+            values = np.concatenate((values, [values[0]]))
+            
+            ax.plot(angles, values, 'o-', color=colors[i % len(colors)],
+                    label=model, alpha=0.7, linewidth=2)
+            ax.fill(angles, values, color=colors[i % len(colors)], alpha=0.1)
+        
+        ax.set_xticks(angles[:-1])
+        ax.tick_params(axis='both', which='major', labelsize=10)
+        ax.set_xticklabels(criteria, fontfamily='Times New Roman', fontsize=10)
+        ax.set_title('(d) Criteria Performance Comparison', fontfamily='Times New Roman',
+                     fontweight='bold', fontsize=14, pad=20)
+        
+        ax.legend(loc='center left', bbox_to_anchor=(1.2, 0.5),
+                 prop={'family': 'Times New Roman', 'size': 10})
+
     def plot_results(self, results):
         plt.style.use('seaborn-v0_8-whitegrid')
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['font.serif'] = ['Times New Roman']
+        plt.rcParams['axes.unicode_minus'] = False
         
-        palette1 = ['#92A5D1', '#C5DFF4', '#AEB2D1', '#D9B9D4', '#E8D0E8', '#F0E5E5', '#FFD700', '#FF69B4']  # Added two more colors
-        palette2 = ['#C25759', '#E69191', '#EDB8B0', '#F5DFDB', '#F8ECEC', '#FAF5F5', '#FFA07A', '#FF4500']  # Added two more colors
-        palette3 = ['#7C9B95', '#C9DCC4', '#DAA87C', '#F4EEAC', '#F9F5D7', '#FCF9F0', '#98FB98', '#00CED1']  # Added two more colors
+        nature_colors = ['#4878D0', '#EE854A', '#6ACC64', '#D65F5F', '#956CB4', 
+                        '#8C613C', '#DC7EC0', '#797979']
         
-        # Create 8-color palettes for each plot
-        overall_palette = palette1
-        type_palette = palette2
-        total_palette = palette3
-        criteria_palette = palette1
+        fig = plt.figure(figsize=(20, 15))
+        gs = plt.GridSpec(2, 2, figure=fig)
         
-        self.plot_overall_performance(results, overall_palette)
-        self.plot_performance_by_type(results, type_palette)
-        self.plot_total_scores(results, total_palette)
-        self.plot_criteria_scores(results, criteria_palette)
-
-    def plot_overall_performance(self, results, palette):
-        fig, ax = plt.subplots(figsize=(14, 7))
-        models = list(results['model_average_scores'].keys())
-        scores = list(results['model_average_scores'].values())
+        ax1 = fig.add_subplot(gs[0, 0])
+        self.plot_performance_distribution(results, ax1, nature_colors)
         
-        errors = []
-        for model in models:
-            model_scores = [score['final_score'] for result in results['individual_results'] 
-                            for model_name, score in result['model_scores'].items() if model_name == model]
-            errors.append(self.calculate_error(model_scores))
+        ax2 = fig.add_subplot(gs[0, 1])
+        self.plot_enhanced_type_performance(results, ax2, nature_colors)
         
-        bars = ax.bar(models, scores, color=palette[:len(models)], alpha=0.8)
+        ax3 = fig.add_subplot(gs[1, 0])
+        self.plot_criteria_heatmap(results, ax3)
         
-        ax.errorbar(models, scores, yerr=errors, fmt='none', ecolor='black', capsize=3)
-        
-        ax.set_title('Overall Model Performance', fontsize=16, fontweight='bold')
-        ax.set_xlabel('Models', fontsize=12)
-        ax.set_ylabel('Average Score', fontsize=12)
-        ax.tick_params(axis='both', which='major', labelsize=10)
-        
-        y_max = max(scores) + max(errors) + 0.5
-        ax.set_ylim(0, y_max)
-        
-        for bar in bars:
-            height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., height + max(errors) + 0.1,
-                    f'{height:.2f}',
-                    ha='center', va='bottom', fontsize=10)
+        ax4 = fig.add_subplot(gs[1, 1], projection='polar')
+        self.plot_criteria_radar(results, ax4, nature_colors)
         
         plt.tight_layout()
-        plt.savefig('overall_performance.png', dpi=600, bbox_inches='tight')
-        plt.close()
-
-    def plot_performance_by_type(self, results, palette):
-        fig, ax = plt.subplots(figsize=(18, 8))  # Increased figure width
-        x = np.arange(len(self.question_types))
-        width = 0.10  # Adjusted for 8 models
-        
-        for i, model in enumerate(self.models):
-            scores = [results['model_type_scores'][model][qtype] for qtype in self.question_types]
-            errors = [self.calculate_error([result['model_scores'][model]['final_score'] 
-                                            for result in results['individual_results'] 
-                                            if result['question_type'] == qtype]) 
-                      for qtype in self.question_types]
-            
-            bars = ax.bar(x + i*width, scores, width, label=model, color=palette[i % len(palette)], alpha=0.8)
-            
-            ax.errorbar(x + i*width, scores, yerr=errors, fmt='none', ecolor='black', capsize=3)
-            
-            for j, bar in enumerate(bars):
-                height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width()/2., height + errors[j] + 0.1,
-                        f'{height:.2f}', ha='center', va='bottom', fontsize=8, rotation=0)
-        
-        ax.set_title('Model Performance by Question Type', fontsize=16, fontweight='bold')
-        ax.set_xlabel('Question Types', fontsize=12)
-        ax.set_ylabel('Average Score', fontsize=12)
-        ax.set_xticks(x + width * (len(self.models) - 1) / 2)
-        ax.set_xticklabels(self.question_types, rotation=0, ha='center')
-        ax.legend(title='Models', title_fontsize='12', fontsize='10', loc='upper left', bbox_to_anchor=(1, 1))
-        ax.tick_params(axis='both', which='major', labelsize=10)
-        
-        y_max = max([max(results['model_type_scores'][model].values()) for model in self.models]) + 0.5
-        ax.set_ylim(0, y_max)
-        
-        plt.tight_layout()
-        plt.savefig('performance_by_type.png', dpi=600, bbox_inches='tight')
-        plt.close()
-
-    def plot_total_scores(self, results, palette):
-        fig, ax = plt.subplots(figsize=(14, 7))
-        models = list(results['model_total_scores'].keys())
-        scores = list(results['model_total_scores'].values())
-        
-        errors = []
-        for model in models:
-            model_scores = [score['final_score'] for result in results['individual_results'] 
-                            for model_name, score in result['model_scores'].items() if model_name == model]
-            errors.append(self.calculate_error(model_scores) * len(results['individual_results']))
-        
-        bars = ax.bar(models, scores, color=palette[:len(models)], alpha=0.8)
-        
-        ax.errorbar(models, scores, yerr=errors, fmt='none', ecolor='black', capsize=3)
-        
-        ax.set_title('Total Model Scores', fontsize=16, fontweight='bold')
-        ax.set_xlabel('Models', fontsize=12)
-        ax.set_ylabel('Total Score', fontsize=12)
-        ax.tick_params(axis='both', which='major', labelsize=10)
-        
-        y_max = max(scores) + max(errors) + 20
-        ax.set_ylim(0, y_max)
-        
-        for bar in bars:
-            height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., height + max(errors) + 5,
-                    f'{height:.1f}',
-                    ha='center', va='bottom', fontsize=10)
-        
-        plt.tight_layout()
-        plt.savefig('total_scores.png', dpi=600, bbox_inches='tight')
-        plt.close()
-
-
-    def plot_criteria_scores(self, results, palette):
-        fig, ax = plt.subplots(figsize=(18, 8))  # Increased figure width
-        criteria = list(results['model_criteria_scores'][self.models[0]].keys())
-        x = np.arange(len(criteria))
-        width = 0.10  # Adjusted for 8 models
-
-        for i, model in enumerate(self.models):
-            scores = [results['model_criteria_scores'][model][criterion] for criterion in criteria]
-            errors = [self.calculate_error([result['model_scores'][model]['criteria_scores'].get(criterion, 0) 
-                                            for result in results['individual_results']]) 
-                      for criterion in criteria]
-            
-            bars = ax.bar(x + i*width, scores, width, label=model, color=palette[i % len(palette)], alpha=0.8)
-            
-            ax.errorbar(x + i*width, scores, yerr=errors, fmt='none', ecolor='black', capsize=3)
-            
-            for j, bar in enumerate(bars):
-                height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width()/2., height + errors[j] + 0.01,
-                        f'{height:.2f}', ha='center', va='bottom', fontsize=8, rotation=0)
-        
-        ax.set_title('Model Performance by Criteria', fontsize=16, fontweight='bold')
-        ax.set_xlabel('Criteria', fontsize=12)
-        ax.set_ylabel('Average Score', fontsize=12)
-        ax.set_xticks(x + width * (len(self.models) - 1) / 2)
-        ax.set_xticklabels(criteria, rotation=45, ha='right')
-        ax.legend(title='Models', title_fontsize='12', fontsize='10', loc='upper left', bbox_to_anchor=(1, 1))
-        ax.tick_params(axis='both', which='major', labelsize=10)
-        
-        y_min = min([min(results['model_criteria_scores'][model].values()) for model in self.models])
-        y_max = max([max(results['model_criteria_scores'][model].values()) for model in self.models])
-        
-        y_padding = (y_max - y_min) * 0.1
-        y_min -= y_padding
-        y_max += y_padding
-        
-        if y_min > 0:
-            y_min = 0
-        elif y_max < 0:
-            y_max = 0
-        
-        ax.set_ylim(y_min, y_max)
-        
-        ax.axhline(y=0, color='black', linestyle='-', linewidth=0.5)
-        
-        plt.tight_layout()
-        plt.savefig('criteria_scores.png', dpi=600, bbox_inches='tight')
+        plt.savefig('combined_analysis.png', dpi=600, bbox_inches='tight')
         plt.close()
 
 def load_questions(file_path):
@@ -535,7 +565,7 @@ def main():
             json.dump(results, f, indent=2)
         
         logging.info("Evaluation completed. Results saved to evaluation_results.json")
-        logging.info("Performance plots saved as overall_performance.png, performance_by_type.png, total_scores.png, and criteria_scores.png")
+        logging.info("Performance plots saved as combined_analysis")
     else:
         logging.error("Failed to load questions. Exiting.")
 
