@@ -21,7 +21,7 @@ Click on the image below to watch our project demonstration video:
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%20Video%20of%20Search%20on%20the%20Official%20Website%20of%20Nature%20Chemistry%20Journal.mp4)
 
 ### Multimodal Large Model Test Demonstration Video
-![Multimodal Large Model Test Demonstration Video](https://github.com/KangyongMa/GVIM/blob/main/picture/Multimodal%20Large%20Model%20Test%20Demonstration%20Video..png)
+![Multimodal Large Model Test Demonstration Video](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Functionality%20Expansion%E2%80%94Multimodal%20Models.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/The%20multimodal%20system%20model%20image%20recognition%20demonstration%20video..mp4)
 
 ### Multimodal system handwritten chemical formula recognition demonstration video
@@ -111,4 +111,3 @@ python app.py
   ]
 }
 ```
-
