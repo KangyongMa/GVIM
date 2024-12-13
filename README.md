@@ -18,15 +18,19 @@ Click on the image below to watch our project demonstration video:
 
 ### Nature Chemistry latest reports
 ![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/UI%20of%20Set%20Web%20URL.png)
-[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Nature%20Chemistry%20latest%20reports.mp4)
+[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%20Video%20of%20Search%20on%20the%20Official%20Website%20of%20Nature%20Chemistry%20Journal.mp4)
 
 ### Multimodal Large Model Test Demonstration Video
 ![Multimodal Large Model Test Demonstration Video](https://github.com/KangyongMa/GVIM/blob/main/picture/Multimodal%20Large%20Model%20Test%20Demonstration%20Video..png)
-[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20Large%20Model%20Test%20Demonstration%20Video..mp4)
+[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/The%20multimodal%20system%20model%20image%20recognition%20demonstration%20video..mp4)
 
-### Demonstration of an intelligent system based on local document knowledge
-![Demonstration of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
-[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
+### Multimodal system handwritten chemical formula recognition demonstration video
+![Multimodal system handwritten chemical formula recognition demonstration video.](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Multimodal%20system%20handwritten%20chemical%20formula%20recognition%20demonstration%20video.png)
+[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20system%20handwritten%20chemical%20formula%20recognition%20demonstration%20video..mp4)
+
+### Demo 1 of an intelligent system based on local document knowledge
+![Demo 1 of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
+[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
 ### Demonstration of precise answers based on RAG
 ![Demonstration of precise answers based on RAG](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20precise%20answers%20based%20on%20RAG.png)
