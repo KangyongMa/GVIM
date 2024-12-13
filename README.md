@@ -29,7 +29,7 @@ Click on the image below to watch our project demonstration video:
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20system%20handwritten%20chemical%20formula%20recognition%20demonstration%20video..mp4)
 
 ### Demo 1 of an intelligent system based on local document knowledge
-![Demo 1 of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
+![Demo 1 of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
 ### Demonstration of precise answers based on RAG
