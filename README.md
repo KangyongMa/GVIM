@@ -17,7 +17,7 @@ Click on the image below to watch our project demonstration video:
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Usage%20example.mp4)
 
 ### Nature Chemistry latest reports
-![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/picture/Nature%20Chemistry%20latest%20reports.png)
+![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/UI%20of%20Set%20Web%20URL.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Nature%20Chemistry%20latest%20reports.mp4)
 
 ### Multimodal Large Model Test Demonstration Video
