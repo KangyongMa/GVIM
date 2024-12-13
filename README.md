@@ -32,18 +32,25 @@ Click on the image below to watch our project demonstration video:
 ![Demo 1 of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
-### Demonstration of precise answers based on RAG
-![Demonstration of precise answers based on RAG](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20precise%20answers%20based%20on%20RAG.png)
-[Watch Video1](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20precise%20answers%20based%20on%20RAG.mp4)
-[Watch Video2](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20answers%20based%20on%20RAG.mp4)
+### Demo 2 of an intelligent system based on local document knowledge
+![Demo 2 of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%202%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
+[Watch Video1](https://github.com/KangyongMa/GVIM/blob/main/Demo%202%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
+
+### Demo 3 of an intelligent system based on local document knowledge
+![Demo 3 of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%203%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
+[Watch Video1](https://github.com/KangyongMa/GVIM/blob/main/Demo%203%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
+
+### Demo 4 of an intelligent system based on local document knowledge
+![Demo 4 of an intelligent system based on local document knowledge](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%204%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
+[Watch Video1](https://github.com/KangyongMa/GVIM/blob/main/Demo%204%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
 ### Demonstration of the conversion between New Chat and History Chat
-![Demonstration of the conversion between New Chat and History Chat](https://github.com/KangyongMa/GVIM/blob/main/picture/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat..png)
-[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat..mp4)
+![Demonstration of the conversion between New Chat and History Chat](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/UI%20of%20System%20History.png)
+[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat.mp4)
 
 ### Search for Digital Discovery
-![Search for Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/picture/Search%20for%20Digital%20Discovery.png)
-[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Search%20for%20Digital%20Discovery.mp4)
+![Search for Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.png)
+[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.mp4)
 
 ## 🌟 Key Features
 
