@@ -1,4 +1,4 @@
-# Application of Self-Evolving AI Agents in Chemical Research: A Novel Intelligent Assistance System 🧪🤖
+# Application of Adaptive AI Agents in Chemistry Research: An Intelligent Assistance System with Evolutionary-Inspired Features 🧪🤖
 
 <div align="center">
 
