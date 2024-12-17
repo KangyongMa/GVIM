@@ -342,7 +342,7 @@
       "Llama3.1": "The predicted oil solubility of the molecule with the given InChI identifier is 0.0009 g/g."
     },
     "correct_answer": "“Unable to answer the question due to lack of conditions”",
-    "type": "numeric"
+    "type": "descriptive"
   },
   {
     "question": "“Please give me some details about [C][C@H1][Branch1][Branch1][C][C][C][O][C][=Branch1][=Branch1][=C][Branch1][C][C][C][C][C][C][=C][C][=C][Branch1][Branch1][C][=C][Ring1][=Branch1][C][=Branch1][C][=O][C][=C][C][Ring1][=Branch2][=O]",
@@ -882,7 +882,7 @@
       "Llama3.1": "The predicted oil solubility for 2,3,4-Trichlorophenol at room temperature (20°C) is 0.0061 g/L. This value indicates the solubility of the molecule in a typical oil under these conditions. The exact solubility might vary slightly depending on the specific properties of the oil used in the measurement. If you need more details or have other questions, feel free to ask!"
     },
     "correct_answer": "“Unable to answer the question due to lack of conditions”",
-    "type": "numeric"
+    "type": "descriptive"
   },
   {
     "question": "“Please provide the lowest unoccupied molecular orbital (LUMO) energy of [C][O][C][C][C][C][Ring1][Ring1][C][Branch1][C][C][O][Ring1][=Branch1]”",
