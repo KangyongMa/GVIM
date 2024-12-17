@@ -554,7 +554,7 @@ def main():
     }
     evaluator = OptimizedModelEvaluator(config)
     
-    questions_file = 'E://HuaweiMoveData//Users//makangyong//Desktop//txt 2.json'
+    questions_file = 'yourpath//txt 2.json'
     questions_data = load_questions(questions_file)
     
     if questions_data:
