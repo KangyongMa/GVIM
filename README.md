@@ -38,10 +38,6 @@ This project involves fine-tuning open-source large language models with chemica
 
 ## 📹 Project Demonstrations
 
-### Usage example
-![Usage example](https://github.com/KangyongMa/GVIM/blob/main/picture/Usage%20example.png)
-[Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Usage%20example.mp4)
-
 ### Nature Chemistry latest reports
 ![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/UI%20of%20Set%20Web%20URL.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%20Video%20of%20Search%20on%20the%20Official%20Website%20of%20Nature%20Chemistry%20Journal.mp4)
