@@ -1,309 +1,2761 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chemistry Lab AI</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Advanced Chemistry Lab AI Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+	<script>
+	window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Global error:", message, source, lineno, colno, error);
+        alert("An error occurred. Please check the console for more details.");
+        return false; 
+    };
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f0f4f8;
+    window.processedSMILES = new Set();
+
+    window.addEventListener('unhandledrejection', function(event) {
+        console.error("Unhandled promise rejection:", event.reason);
+        alert("An asynchronous error occurred. Please check the console for more details.");
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof $3Dmol !== 'undefined') {
+            console.log("3Dmol.js version:", $3Dmol.version);
+        } else {
+            console.warn("3Dmol.js is not loaded or not available");
         }
-
-        .chat-container {
-            display: flex;
-            height: 100vh;
-            max-width: 1200px;
+    });
+	</script>  
+    <script>
+        function ensureDependencies() {
+            return new Promise((resolve, reject) => {
+                // Check if jQuery is loaded
+                if (typeof jQuery === 'undefined') {
+                    const jqueryScript = document.createElement('script');
+                    jqueryScript.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+                    jqueryScript.onload = resolve;
+                    jqueryScript.onerror = reject;
+                    document.head.appendChild(jqueryScript);
+                } else {
+                    resolve();
+                }
+            });
+        }
+    </script>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+		
+		body {
+		    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+		    background-color: #f0f4f8;
+		    transition: background-color 0.3s ease;
+		    line-height: 1.6;
+		    margin: 0;
+		    padding: 0;
+            -webkit-font-smoothing: antialiased;
+		}
+		
+		body.dark-mode {
+		    background-color: #1a202c;
+		    color: #e2e8f0;
+		}
+		
+		.chat-container {
+		    display: flex;
+		    height: 100vh;
+		    max-width: 1400px;
             margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1); 
+            border-radius: 16px;
             overflow: hidden;
+            letter-spacing: 0.01em;
         }
 
-        .sidebar {
-            width: 250px;
-            background-color: #1e3a8a;
-            color: white;
-            padding: 1.5rem;
-            flex-shrink: 0;
-        }
-
-        .main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0; /* Add this line */
-        }
-
-        .chat-header {
-            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-            color: white;
-            text-align: center;
-            padding: 1rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        #chat-messages {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            background-color: #ffffff;
-        }
-
-        .input-area {
-            display: flex;
-            flex-direction: column;
-            padding: 1rem;
-            background-color: #e5e7eb;
-            border-top: 1px solid #d1d5db;
-        }
-
-        .input-row {
-            display: flex;
-            margin-bottom: 0.5rem;
-        }
-
-        #user-input {
-            flex-grow: 1;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 24px;
-            margin-right: 0.5rem;
-        }
-
-        #send-btn {
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 24px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #send-btn:hover {
-            background-color: #1d4ed8;
-        }
-
-        .option-btn {
-            background-color: #4a5568;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 24px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-right: 0.5rem;
-        }
-
-        .option-btn:hover {
-            background-color: #2d3748;
-        }
-
-        .option-input {
-            display: none;
-            flex-grow: 1;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 24px;
-            margin-right: 0.5rem;
-        }
-
-        .agent-info {
-            display: flex;
+        .feedback-toggle-btn {
+            display: inline-flex;
             align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .agent-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            margin-right: 0.5rem;
-            object-fit: cover;
-        }
-
-        .message {
-            display: flex;
-            margin-bottom: 1rem;
-            align-items: flex-start;
-        }
-
-        .message .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 1rem;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        .message .bubble {
-            background-color: #e6f3ff;
-            border-radius: 18px;
-            padding: 0.75rem 1rem;
-            max-width: 70%;
-            word-wrap: break-word;
-        }
-
-        .message.user .bubble {
-            background-color: #dcf8c6;
-            margin-left: auto;
-        }
-
-        .message .name {
-            font-weight: bold;
-            margin-bottom: 0.25rem;
-            color: #333;
-        }
-
-        .feedback-buttons {
-            display: flex;
-            justify-content: center;
-            margin-top: 1rem;
-        }
-
-        .feedback-button {
-            margin: 0 0.5rem;
+            gap: 0.5rem;
             padding: 0.5rem 1rem;
-            border-radius: 20px;
+            background-color: #f0f7ff;
+            border: 1px solid #e6f0fd;
+            border-radius: 9999px;
+            color: #3b82f6;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .feedback-toggle-btn:hover {
+            background-color: #e6f0fd;
+            border-color: #bfdbfe;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .feedback-toggle-btn svg {
+            width: 16px;
+            height: 16px;
+            color: #3b82f6;
+            transition: all 0.2s ease;
+        }
+
+        .feedback-toggle-btn.rated svg {
+            color: white;
+            fill: #fff;
+        }
+
+        .feedback-toggle-btn.rated {
+            background-color: #3b82f6;
+            border-color: #2563eb;
+            color: white;
+        }
+
+        .feedback-panel {
+            position: absolute;
+            bottom: calc(100% + 0.75rem);
+            right: 0; 
+            width: 320px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            padding: 0.75rem;
+            z-index: 50;
+            animation: panelSlideIn 0.2s ease;
+        }
+
+        .feedback-panel::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 1.5rem;
+            width: 16px;
+            height: 16px;
+            background: inherit;
+            transform: rotate(45deg);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .feedback-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            margin: 0.25rem 0;
+            border-radius: 0.75rem;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .feedback-option:hover {
+            background: #f0f7ff;
+            transform: translateX(4px);
+            border-color: #e6f0fd;
+        }
+
+        .feedback-option.selected {
+            background: #f0f7ff;
+            border-color: #3b82f6;
+        }
+
+        .feedback-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        } 
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .historical-feedback {
+            pointer-events: none;
+            opacity: 0.9;
+            transition: all 0.2s ease;
+        }
+
+        .historical-feedback:hover {
+            transform: none;
+        }
+
+        .feedback-details {
+            font-size: 0.875rem;
+            line-height: 1.4;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            border-radius: 0.375rem;
+            background-color: rgba(59, 130, 246, 0.1);
+        } 
+
+        .dark-mode .feedback-details {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .smiles-placeholder {
+            display: inline-block;
+            font-family: monospace;
+            transition: all 0.3s ease;
+        }
+
+        .molecule-ref {
+            display: inline-flex;
+            align-items: center;
+            margin: 0.25rem 0.5rem 0.25rem 0;
+            padding: 0.25rem;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            font-family: monospace;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .feedback-button:hover {
-            transform: translateY(-2px);
+        .dark-mode .molecule-ref {
+            background-color: #374151;
         }
 
-        .search-results {
-            background-color: #f3f4f6;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-            border: 1px solid #d1d5db;
+        .dark-mode .feedback-toggle-btn {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
         }
 
-        .search-result {
-            background-color: white;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: box-shadow 0.3s ease;
-            border-left: 4px solid #3b82f6;
+        .dark-mode .feedback-option:hover {
+            background: #334155;
         }
 
-        .search-result:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        .dark-mode .feedback-option.selected {
+            background: #1e40af;
+            border-color: #60a5fa;
         }
 
-        .search-result-title {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 0.5rem;
+        .dark-mode .feedback-label {
+            color: #f3f4f6;
         }
 
-        .search-result-url {
-            color: #4b5563;
-            font-size: 0.9em;
-            margin-bottom: 0.5rem;
+        .dark-mode .feedback-score {
+            color: #60a5fa;
+        }
+
+        .dark-mode .feedback-icon {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .dark-mode .feedback-panel {
+            background: #1f2937;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-mode .feedback-option {
+            background: #283548;
+        }
+
+        .dark-mode .feedback-score,
+        .dark-mode .feedback-description {
+            color: #9ca3af;
+        }
+
+        .dark-mode .feedback-toggle-btn:hover {
+            background-color: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .dark-mode .feedback-toggle-btn.rated {
+            background-color: #3b82f6;
+            border-color: #2563eb;
+            color: white;
+        }
+
+        .dark-mode .feedback-toggle-btn.rated svg {
+            color: #60a5fa;
+        }
+		
+		.sidebar {
+		    width: 300px;
+		    min-width: 300px;
+		    max-width: 300px;
+		    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+		    color: white;
+		    padding: 1.5rem;
+		    transition: all 0.3s ease;
+		    position: relative;
+		    display: flex;
+		    flex-direction: column;
+		    height: 100vh;
+		    overflow-y: auto;
+		    z-index: 1000;
+		}
+		
+		.sidebar.collapsed {
+		    width: 80px;
+		    min-width: 80px;
+		    max-width: 80px;
+		    overflow-y: visible;
+		}
+		
+		.sidebar-section {
+		    margin-bottom: 2rem;
+		}
+		
+		#agent-status {
+		    max-height: calc(100vh - 250px);
+		    overflow-y: auto;
+		    scrollbar-width: thin;
+		    scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+		}
+		
+		#agent-status::-webkit-scrollbar {
+		    width: 6px;
+		}
+		
+		#agent-status::-webkit-scrollbar-thumb {
+		    background-color: rgba(255, 255, 255, 0.5);
+		    border-radius: 3px;
+		}
+		
+		.sidebar.collapsed #agent-status {
+		    overflow-y: visible;
+		    max-height: none;
+		}
+
+        .result-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .result-modal-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .result-modal-card {
+            background: #1f2937;
+            color: #e5e7eb;
+        }
+
+        .result-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .result-modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-right: 32px;
+        }
+
+        .result-modal-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .result-modal-url {
+            color: #3b82f6;
             word-break: break-all;
         }
+		
+		.section-title {
+		    font-size: 1.1rem;
+		    margin-bottom: 1rem;
+		    color: #a5b4fc;
+		    text-transform: uppercase;
+		    letter-spacing: 0.01em;
+		    font-weight: 600;
+		}
+		
+		.agent-info {
+		    display: flex;
+		    align-items: center;
+		    padding: 0.75rem;
+		    border-radius: 12px;
+		    transition: all 0.3s ease;
+		    background-color: rgba(255, 255, 255, 0.1);
+		    margin-bottom: 0.5rem;
+		}
+		
+		.sidebar.collapsed .agent-info {
+		    justify-content: center;
+		    padding: 0.5rem;
+		    margin-bottom: 0.25rem;
+		}
+		
+		.agent-avatar {
+		    width: 40px;
+		    height: 40px;
+		    min-width: 40px;
+		    background-size: cover;
+		    background-position: center;
+		    border-radius: 50%;
+		    margin-right: 0.75rem;
+		    transition: all 0.3s ease;
+		    border: 2px solid #a5b4fc;
+		}
+		
+		.sidebar.collapsed .agent-avatar {
+		    margin-right: 0;
+		}
+		
+		.agent-info:hover .agent-avatar {
+		    transform: scale(1.1);
+		}
+		
+		.agent-details {
+		    flex-grow: 1;
+		    overflow: hidden;
+		}
+		
+		.agent-name {
+		    font-weight: 500;
+		    margin-bottom: 0.25rem;
+		    font-size: 1.1rem;
+		    white-space: nowrap;
+		    overflow: hidden;
+		    text-overflow: ellipsis;
+		}
+		
+		.agent-level,
+		.agent-skills {
+		    font-size: 0.8rem;
+		    color: #a5b4fc;
+		}
+		
+		.level-progress {
+		    height: 4px;
+		    background-color: rgba(255, 255, 255, 0.2);
+		    border-radius: 2px;
+		    margin-top: 0.5rem;
+		    overflow: hidden;
+		}
+		
+		.level-progress-bar {
+		    height: 100%;
+		    background-color: #4ade80;
+		    border-radius: 2px;
+		    transition: width 0.3s ease;
+		}
+		
+		.chat-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            gap: 0.75rem;
+            width: 100%; 
+        }
+		
+        .chat-control-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            font-weight: 500;
+            width: 100%; 
+            max-width: 240px;
+        }
 
-        .search-result-content {
-            color: #1f2937;
+		.chat-control-btn:hover {
+		    background-color: rgba(255, 255, 255, 0.2);
+		    transform: translateY(-2px);
+		}
+		
+		.chat-control-btn i {
+		    margin-right: 0.75rem;
+		    font-size: 1.1rem;
+            min-width: 1.1rem;
+		}
+		
+		.toggle-sidebar-btn {
+		    position: absolute;
+		    top: 50%;
+		    right: -20px;
+		    transform: translateY(-50%);
+		    background-color: #3b82f6;
+		    color: white;
+		    border: none;
+		    width: 40px;
+		    height: 40px;
+		    border-radius: 50%;
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    cursor: pointer;
+		    transition: all 0.3s ease;
+		    z-index: 10;
+		    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		}
+		
+		.toggle-sidebar-btn:hover {
+		    background-color: #2563eb;
+		}
+
+        .search-results-content {
+            padding: 1.5rem;
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+		.main-content {
+		    flex: 1;
+		    display: flex;
+		    flex-direction: column;
+		    transition: all 0.3s ease;
+		    min-width: 0;
+		}
+		
+		.chat-header {
+		    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+		    color: white;
+		    text-align: center;
+		    padding: 1.25rem;
+		    font-size: 1.5rem;
+		    font-weight: 700;
+		    letter-spacing: 1px;
+		    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		}
+		
+		#chat-messages {
+		    flex-grow: 1;
+		    overflow-y: auto;
+		    padding: 1.5rem;
+		    background-color: #ffffff;
+		    transition: background-color 0.3s ease;
+		}
+		
+		.dark-mode #chat-messages {
+		    background-color: #2d3748;
+		}
+        
+        #image-preview-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px 0;
+            max-width: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f3f4f6;
+        }
+
+        #image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .remove-image-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc2626;
+        }
+
+        .remove-image-btn:hover {
+            background: #dc2626;
+            color: white;
+         }
+
+        #error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            background-color: #fef2f2;
+            border-radius: 0.375rem;
+            display: none;
+        } 
+
+        .dark-mode #error-message {
+            background-color: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .dark-mode #image-preview-container {
+            background: #374151;
+        }
+		
+		.input-area {
+		    display: flex;
+		    flex-direction: column;
+		    padding: 1.5rem;
+		    background-color: #f3f4f6;
+		    border-top: 1px solid #e5e7eb;
+		    transition: background-color 0.3s ease;
+		}
+		
+		.dark-mode .input-area {
+		    background-color: #1a202c;
+		    border-top-color: #4a5568;
+		}
+		
+		.input-row {
+		    display: flex;
+		    margin-bottom: 0.75rem;
+		}
+		
+		#user-input {
+		    flex-grow: 1;
+		    padding: 0.75rem 1rem;
+		    border: 1px solid #d1d5db;
+		    border-radius: 24px;
+		    margin-right: 0.75rem;
+		    font-size: 1rem;
+		    transition: all 0.3s ease;
+            line-height: 1.5;
+		}
+		
+		.dark-mode #user-input {
+		    background-color: #2d3748;
+		    border-color: #4a5568;
+		    color: #e2e8f0;
+		}
+		
+		#user-input:focus {
+		    outline: none;
+		    border-color: #3b82f6;
+		    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+		}
+
+        .result-tooltip {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem;
+        }
+
+        .dark-mode .result-tooltip {
+            background-color: #1f2937;
+            border-color: #374151;
+            color: #e5e7eb;
+        }
+		
+		#send-btn {
+		    background-color: #3b82f6;
+		    color: white;
+		    border: none;
+		    padding: 0.75rem 1.5rem;
+		    border-radius: 24px;
+		    cursor: pointer;
+		    transition: all 0.3s ease;
+		    font-weight: 500;
+		}
+		
+		#send-btn:hover {
+		    background-color: #2563eb;
+		    transform: translateY(-2px);
+		}
+		
+		.option-btn {
+		    background-color: #6b7280;
+		    color: white;
+		    border: none;
+		    padding: 0.6rem 1rem;
+		    border-radius: 24px;
+		    cursor: pointer;
+		    transition: all 0.3s ease;
+		    margin-right: 0.75rem;
+		    font-size: 0.9rem;
+		    font-weight: 500;
+		}
+		
+		.option-btn:hover {
+		    background-color: #4b5563;
+		    transform: translateY(-2px);
+		}
+		
+		.option-input {
+		    display: none;
+		    flex-grow: 1;
+		    padding: 0.6rem 1rem;
+		    border: 1px solid #d1d5db;
+		    border-radius: 24px;
+		    margin-right: 0.75rem;
+		    font-size: 0.9rem;
+		}
+		
+		.dark-mode .option-input {
+		    background-color: #2d3748;
+		    border-color: #4a5568;
+		    color: #e2e8f0;
+		}
+		
+		.message {
+		    display: flex;
+		    margin-bottom: 1.5rem;
+		    align-items: center;
+		}
+		
+		.message .avatar {
+		    width: 40px;
+		    height: 40px;
+		    border-radius: 50%;
+		    margin-right: 1rem;
+		    object-fit: cover;
+		    flex-shrink: 0;
+		}
+		
+		.message .bubble {
+            background-color: #e6f3ff;
+            font-size: 1rem;
+            line-height: 1.7;
+            border-radius: 18px;
+            padding: 1.25rem 1.5rem; 
+            max-width: 70%;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            overflow-wrap: break-word;
+            text-align: left; 
+            letter-spacing: 0.015em;
+            font-kerning: normal; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-family: 'Times New Roman', Times, serif;
+            align-self: flex-start;
+        }
+
+        .message .bubble p {
+            margin: 0 0 1rem 0;
+            padding: 0;
+            text-align: justify;
+            hyphens: auto;
+            word-break: break-word;
+        }
+
+        .message .bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message .bubble ul,
+        .message .bubble ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .message .bubble li {
+            margin: 0.5rem 0;
+            line-height: 1.7;
+            text-align: left;
+        }
+
+        .message .bubble pre,
+        .message .bubble code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            padding: 0.2em 0.4em;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+		
+        .message .bubble table {
+            width: 100%;
+            margin: 1rem 0;
+            border-collapse: collapse;
             font-size: 0.95em;
         }
 
-        .search-result-summary {
-            color: #4b5563;
-            font-size: 0.9em;
+        .message .bubble th,
+        .message .bubble td {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .message .bubble h1,
+        .message .bubble h2,
+        .message .bubble h3,
+        .message .bubble h4,
+        .message .bubble h5,
+        .message .bubble h6 {
+            margin: 1.5rem 0 1rem 0;
+            line-height: 1.4;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .message .bubble a {
+            color: #3b82f6;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .message .bubble a:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+		.dark-mode .message .bubble {
+            background-color: #3a4758;
+            color: #e2e8f0;
+        }
+
+        .dark-mode .message .bubble code {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode .message .bubble a {
+            color: #60a5fa;
+        }
+		
+		.message.user .bubble {
+		    background-color: #dcf8c6;
+		    margin-left: auto;
+		}
+		
+		.dark-mode .message.user .bubble {
+		    background-color: #2d5a3c;
+		}
+		
+		.message .name {
+		    font-weight: 600;
+		    margin-bottom: 0.4rem;
+		    color: #374151;
+		    font-size: 1rem;
+		}
+		
+		.dark-mode .message .name {
+		    color: #e2e8f0;
+		}
+		
+		.feedback-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
             margin-top: 0.5rem;
-            font-style: italic;
         }
-
-        .search-result-actions {
-            margin-top: 0.5rem;
+		
+		.feedback-button {
+		    display: flex;
+		    flex-direction: column;
+		    align-items: center;
+		    justify-content: center;
+		    width: 60px;
+		    height: 60px;
+		    margin: 0 0.25rem;
+		    padding: 0.75rem;
+		    border: none;
+		    border-radius: 8px;
+		    background: #ffffff;
+		    color: #4b5563;
+		    cursor: pointer;
+		    transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+		}
+		
+		.feedback-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.15);
         }
-
-        .search-result-action {
-            background-color: #e5e7eb;
-            color: #4b5563;
-            border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8em;
-            margin-right: 0.5rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+		
+		.feedback-button:active {
+            transform: translateY(0);
         }
-
-        .search-result-action:hover {
-            background-color: #d1d5db;
-        }
-
-        .chat-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 1rem;
-        }
-
-        .chat-control-btn {
-            background-color: #4a5568;
+		
+		.feedback-button.selected {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 24px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-right: 0.5rem;
+            transform: translateY(-2px);
+        }
+		
+        .feedback-icon {
+            flex-shrink: 0;
+            width: 2.25rem; 
+            height: 2.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            background: white;
+            border: 1px solid #e6f0fd;
+            font-size: 1.25rem;
         }
 
-        .chat-control-btn:hover {
+        .feedback-option:hover .feedback-icon {
+            transform: scale(1.05);
+            border-color: #bfdbfe;
+        }
+
+        .historical-feedback.rated {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .dark-mode .historical-feedback.rated {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .feedback-content {
+            flex: 1;
+            min-width: 0;
+            padding-right: 0.5rem;
+        }
+
+        .feedback-button.selected .feedback-icon {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .feedback-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .feedback-score {
+            font-size: 0.75rem;
+            color: #3b82f6;
+            margin-bottom: 0.25rem;
+        }
+
+        .feedback-description {
+            font-size: 0.75rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+		
+		.feedback-value {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .dark-mode .feedback-value {
+            background: #60a5fa;
+        }
+		
+		.search-results {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 1px solid #e5e7eb;
+        }
+		
+		.dark-mode .search-results {
+            background-color: #1f2937;
+            border-color: #374151;
+        }
+
+        .search-group {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 0.75rem;
+            margin-bottom: 24px;
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .result-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .result-link:hover {
+            text-decoration: underline;
+        }
+
+        .result-item {
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .search-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .search-group:hover {
+            background-color: #f8fafc;
+        }
+
+        .dark-mode .search-group {
+            background: #1f2937;
+        }
+
+        .dark-mode .search-group:hover {
+            background-color: #1e293b;
+        }
+
+        .dark-mode .feedback-button {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .feedback-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            padding: 2px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feedback-button:hover::before {
+            opacity: 1;
+        }
+
+		.search-result-card {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-group-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-group-header .icon-container {
+            background: #f3f4f6;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dark-mode .search-group-header {
+            border-bottom-color: #374151;
+        }
+
+        .dark-mode .search-group-header .icon-container {
+            background: #374151;
+        }
+
+        .search-group-header i {
+            color: #3b82f6;
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .search-group-header span {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .dark-mode .search-group-header span {
+            color: #e5e7eb;
+        } 
+
+        .search-results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .search-result-item {
+            position: relative;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            overflow: visible;
+            cursor: pointer;
+        }
+
+        .search-result-item:hover .result-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .search-result-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: currentColor;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .search-result-item:hover::after {
+            opacity: 0.05;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        } 
+
+        .tooltip-content {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #6b7280;
+        }
+
+        .dark-mode .tooltip-content {
+            color: #9ca3af;
+        }
+
+        .dark-mode .search-result-item {
+            background: #374151;
+            border-color: #4b5563;
+        }
+
+        .search-result-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #3b82f6;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+            z-index: 1000;
+        }
+
+        .result-title-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .result-title-link {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #2563eb;
+            text-decoration: none;
+            line-height: 1.4;
+            transition: color 0.2s;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .feedback-container {
+            background: linear-gradient(135deg, rgba(30,58,138,0.05) 0%, rgba(59,130,246,0.05) 100%);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid rgba(59,130,246,0.1);
+            position: relative;
+        }
+
+        .dark-mode .result-title-link {
+            color: #60a5fa;
+        }
+
+        .dark-mode .result-title-link:hover {
+            color: #93c5fd;
+        }
+
+        .result-title-link:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+        .result-title-text {
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .dark-mode .result-title-text {
+            color: #f3f4f6;
+        }
+
+        .result-url-row {
+            margin-bottom: 0.5rem;
+        }
+
+        .result-url-text {
+            color: #6b7280;
+            font-size: 0.875rem;
+            word-break: break-all;
+            margin: 0.5rem 0;
+        }
+
+        .dark-mode .result-url-text {
+            color: #9ca3af;
+        }
+
+        .result-content-row {
+            color: #374151;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            text-align: justify;
+            letter-spacing: 0.015em;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .dark-mode .result-content-row {
+            color: #d1d5db;
+        }
+
+        .result-actions-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .performance-analysis {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            letter-spacing: 0.015em;
+        }
+
+        .performance-analysis ul {
+            padding-left: 1.25rem;
+            text-align: left;
+        }
+
+        .performance-analysis li {
+            margin: 0.5rem 0;
+        }
+
+        .system-message {
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+            color: #6b7280;
+            text-align: center;
+            padding: 0.5rem 0;
+        }
+
+        .dark-mode .result-actions-row {
+            border-top-color: #374151;
+        } 
+
+		.dark-mode .search-result-card {
+            background-color: #374151;
+            box-shadow: none;
+        }
+
+        .dark-mode .search-result-card:hover {
+            background-color: #4b5563;
+            box-shadow: none;
+        }
+
+        .dark-mode .search-result-title {
+            color: #e5e7eb;
+        }
+
+        .dark-mode .search-result-link {
+            color: #3b82f6;
+        }
+
+        .dark-mode .search-result-link:hover {
+            color: #60a5fa;
+        }
+
+        .dark-mode .search-result-summary {
+            color: #9ca3af;
+        }
+
+		.search-result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-result-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-feedback-container {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+            justify-content: center;
+            display: flex;
+            margin: 0;  
+            align-items: center;
+            align-self: center;
+        }
+
+        .search-result-summary {
+            font-size: 1rem;
+            color: #4b5563;
+            margin-bottom: 0.75rem;
+        }
+
+        .search-result-link {
+            font-size: 0.875rem;
+            color: #2563eb;
+            text-decoration: underline;
+        }
+
+        .feedback-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .feedback-mini-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(59,130,246,0.1);
+            color: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .feedback-mini-btn:hover {
+            background: rgba(59,130,246,0.2);
+            transform: scale(1.1);
+        }
+
+        .feedback-mini-btn.rated {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .rating-value {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            width: 16px; 
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rating-panel {
+            position: absolute;
+            bottom: 36px;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 8px;
+            z-index: 20;
+            animation: slideIn 0.2s ease;
+        }
+
+        .history-image {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .image-error-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background-color: #fee2e2;
+            border-radius: 8px;
+            color: #dc2626;
+            margin: 10px 0;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 10px 0;
+        }
+
+        .dark-mode .image-error-message {
+            background-color: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .rating-options {
+            display: flex;
+            gap: 4px;
+        }
+
+        .rating-btn {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            background: white;
+            color: #6b7280;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .rating-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .rating-btn.selected {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        /* Dark mode support */
+        .dark-mode .feedback-mini-btn {
+            background: rgba(96,165,250,0.1);
+            color: #60a5fa;
+        }
+
+        .dark-mode .feedback-mini-btn.rated {
+            background: #60a5fa;
+        }
+
+        .dark-mode .rating-panel {
+            background: #1f2937;
+        }
+
+        .dark-mode .rating-btn {
+            background: #374151;
+            border-color: #4b5563;
+            color: #e5e7eb;
+        }
+
+        .dark-mode .rating-btn:hover {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        .dark-mode .rating-btn.selected {
+            background: #60a5fa;
+            border-color: #60a5fa;
+        }
+
+		.result-header {
+		    display: flex;
+		    align-items: center;
+		    margin-bottom: 0.5rem;
+		}
+		
+		.result-title {
+		    font-size: 1.1rem;
+		    font-weight: 600;
+		    color: #2563eb;
+		    margin-left: 0.5rem;
+		}
+		
+		.dark-mode .result-title {
+		    color: #60a5fa;
+		}
+		
+		.result-url {
+		    color: #6b7280;
+		    font-size: 0.9rem;
+		    margin-bottom: 0.75rem;
+		    word-break: break-all;
+		}
+		
+		.dark-mode .result-url {
+		    color: #9ca3af;
+		}
+		
+		.result-content {
+		    color: #374151;
+		    font-size: 0.9375rem;
+		    line-height: 1.6;
+            letter-spacing: 0.01em;
+		}
+		
+		.dark-mode .result-content {
+		    color: #e2e8f0;
+		}
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #4b5563;
+            background: #f3f4f6;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dark-mode .action-btn {
+            background-color: #374151;
+            color: #e5e7eb;
+        }
+
+        .action-btn:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+            transform: translateY(-1px);
+        }
+
+        .dark-mode .search-results-container {
+            background: #1f2937;
+            border: 1px solid #374151;
+        }
+
+        .dark-mode .action-btn:hover {
+            background-color: #4b5563;
+            color: #f3f4f6;
+        }
+
+        .highlight {
+            background-color: #fef3c7;
+            padding: 0.125rem 0.25rem;
+            border-radius: 2px;
+        }
+
+        .dark-mode .highlight {
+            background-color: #92400e;
+        }
+        
+        .search-results-container {
+            max-width: 100%;
+            margin: 16px 0;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f0f4f8;
+            margin-right: 12px;
+        }
+
+        .icon-wrapper i {
+            color: #4a90e2;
+            font-size: 16px;
+        }
+
+        .results-list {
+            padding: 16px;
+        }
+
+        .search-results-card {
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+            height: 100%;
+        }
+
+        .dark-mode .search-results-card {
+            background-color: #1f2937;
+            border-color: #374151;
+        }
+
+        .search-results-header {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+            gap: 1rem;
+        }
+
+        .search-results-header .icon-container {
+            background: #3b82f6;
+            padding: 0.75rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-results-header .icon-container i {
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .dark-mode .search-results-header {
+            background-color: #111827;
+            border-bottom-color: #374151;
+        }
+
+        .dark-mode .search-results-header i {
+            color: #60a5fa;
+        }
+
+        .search-results-header i {
+            font-size: 1.25rem;
+            margin-right: 0.75rem;
+            color: #3b82f6;
+        }
+
+        .search-results-header span {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .dark-mode .search-results-header span {
+            color: #f3f4f6;
+        }
+		
+		.result-summary {
+		    color: #6b7280;
+		    font-size: 0.9rem;
+		    margin-top: 0.75rem;
+		    font-style: italic;
+		    line-height: 1.4;
+		}
+		
+		.dark-mode .result-summary {
+		    color: #9ca3af;
+		}
+		
+		.result-actions {
+		    margin-top: 0.75rem;
+		    display: flex;
+		    gap: 0.5rem;
+		}
+		
+		.result-action {
+		    background-color: #f3f4f6;
+		    color: #4b5563;
+		    border: none;
+		    padding: 0.4rem 0.75rem;
+		    border-radius: 16px;
+		    font-size: 0.8rem;
+		    cursor: pointer;
+		    transition: all 0.3s ease;
+		    font-weight: 500;
+		}
+		
+		.dark-mode .result-action {
+		    background-color: #374151;
+		    color: #e2e8f0;
+		}
+		
+		.result-action:hover {
+		    background-color: #e5e7eb;
+		    color: #1f2937;
+		}
+		
+		.dark-mode .result-action:hover {
+		    background-color: #4a5568;
+		    color: #f7fafc;
+		}
+		
+		.smiles-container {
+		    display: inline-flex;
+		    align-items: center;
+		    margin: 0.25rem 0.5rem 0.25rem 0;
+		    padding: 0.25rem;
+		    background-color: #f3f4f6;
+		    border-radius: 4px;
+		    font-family: monospace;
+		}
+		
+		.dark-mode .smiles-container {
+		    background-color: #374151;
+		}
+		
+        .molecule-ref {
+            display: inline-flex;
+            align-items: center;
+            margin: 0.25rem 0.5rem 0.25rem 0;
+            padding: 0.25rem;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            font-family: monospace;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .molecule-ref:hover {
+            background-color: #e5e7eb;
+        }
+
+        .view-3d-btn {
+            opacity: 0.8;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .view-3d-btn:hover {
+            opacity: 1;
+            transform: translateY(-1px);
+        }
+
+        .molecule-modal {
+            position: fixed;
+            top: 0;
+            left: 0; 
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        #molecule-display-root {
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+
+        .dark-mode #molecule-display-root {
+            background: #1f2937;
+        }
+
+        .molecule-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .molecule-info {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.375rem;
+        }
+
+        .molecule-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding: 1.5rem;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .property-label {
+            font-weight: bold;
+            color: #374151;
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            background-color: rgba(59, 130, 246, 0.1);
+            border-radius: 0.5rem;
+        }
+
+        .property-value {
+            font-size: 1.1rem;
+            padding: 0.5rem;
+            color: #1f2937;
+        }
+
+        #molecule-viewer {
+            height: 400px;
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .dark .molecule-modal-content {
+            background-color: #1f2937;
+        }
+
+        .dark .property-label {
+            color: #e5e7eb;
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .dark .property-value {
+            color: #f3f4f6;
+        }
+
+        @keyframes panelSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .search-results-content {
+                grid-template-columns: 1fr;
+            }
+
+            .search-result-item {
+                margin-bottom: 1rem;
+            }
+
+            .molecule-modal-content {
+                padding: 1rem;
+                width: 95%;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .property-label,
+            .property-value {
+                font-size: 1rem;
+            }
+    
+            .molecule-info-grid {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .result-actions-row {
+                flex-wrap: wrap;
+            }
+
+            .feedback-panel {
+                right: 0;
+                width: 280px;
+            }
+
+            .feedback-wrapper {
+                position: static;
+            }
+
+            .feedback-panel {
+                position: fixed;
+                bottom: auto;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .dark-mode .molecule-info {
             background-color: #2d3748;
         }
-    </style>
+
+        .dark-mode .molecule-ref {
+            background-color: #374151;
+            color: #e2e8f0;
+        }
+
+        .dark-mode .molecule-ref:hover {
+            background-color: #4b5563;
+        }
+
+        @font-face {
+            font-family: 'Times New Roman', Times, serif;
+            src: local('Times New Roman');
+        }
+
+		.molecule-3d {
+		    width: 300px;
+		    height: 300px;
+		    position: relative;
+		    margin: 10px 0;
+		    border: 1px solid #ddd;
+		    border-radius: 4px;
+		    cursor: pointer;
+		}
+		
+		.smiles-text {
+            font-family: monospace;
+            color: #2563eb;
+		}
+
+        #molecule-viewer {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            background-color: white;
+        }
+
+        .dark-mode .molecule-modal-content {
+            background-color: #1f2937;
+            color: #e5e7eb;
+        }
+
+        .dark-mode .molecule-info-grid {
+            background-color: #374151;
+        }
+
+        .dark-mode .property-value {
+            color: #f3f4f6;
+        }
+
+        .dark-mode .property-label {
+            color: #e5e7eb;
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .dark-mode #molecule-viewer {
+            border-color: #4b5563;
+            background-color: #111827;
+        }
+
+		.dark-mode .smiles-text {
+		    color: #60a5fa;
+		}
+		
+		#molecule-viewer {
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+		
+		@keyframes levelUp {
+		    0%, 100% { transform: scale(1); }
+		    50% { transform: scale(1.1); }
+		}
+		
+		.level-up {
+		    animation: levelUp 0.5s ease;
+		}
+		
+		.thinking-indicator {
+		    display: flex;
+		    justify-content: center;
+		    align-items: center;
+		    height: 24px;
+		}
+		
+		.thinking-indicator span {
+		    background-color: #3b82f6;
+		    width: 8px;
+		    height: 8px;
+		    border-radius: 50%;
+		    margin: 0 4px;
+		    animation: thinking 1.4s infinite ease-in-out both;
+		}
+		
+		.thinking-indicator span:nth-child(1) { animation-delay: -0.32s; }
+		.thinking-indicator span:nth-child(2) { animation-delay: -0.16s; }
+		
+		@keyframes thinking {
+		    0%, 80%, 100% { transform: scale(0); }
+		    40% { transform: scale(1); }
+		}
+		
+		@keyframes fadeInUp {
+		    from {
+		        opacity: 0;
+		        transform: translateY(20px);
+		    }
+		    to {
+		        opacity: 1;
+		        transform: translateY(0);
+		    }
+		}
+		
+		.fade-in-up {
+		    animation: fadeInUp 0.5s ease-out;
+		}
+		
+		@media (max-width: 768px) {
+		    .sidebar {
+		        position: fixed;
+		        left: -300px;
+		        height: 100vh;
+		        z-index: 1000;
+		    }
+		
+		    .sidebar.collapsed {
+		        left: 0;
+		        width: 80px;
+		    }
+		
+		    .main-content {
+		        margin-left: 0;
+		    }
+		
+		    .sidebar.collapsed .toggle-sidebar-btn {
+		        right: -20px;
+		    }
+		}
+		
+		.sidebar.collapsed .section-title,
+		.sidebar.collapsed .agent-details,
+		.sidebar.collapsed .chat-controls span {
+		    display: none;
+		}
+		
+		.sidebar.collapsed .agent-info {
+		    justify-content: center;
+		}
+
+		.sidebar.collapsed .agent-avatar {
+		    width: 40px;
+		    height: 40px;
+		    min-width: 40px;
+		    margin: 0 auto;
+		}
+
+        .sidebar.collapsed .chat-controls {
+            align-items: center;
+        }
+		
+		.sidebar.collapsed .chat-control-btn {
+		    width: 48px;
+		    height: 48px;
+		    padding: 0;
+		    justify-content: center;
+            max-width: 48px;
+		}
+		
+		.sidebar.collapsed .chat-control-btn i {
+		    margin-right: 0;
+		}
+		
+		.sidebar.collapsed .agent-info {
+		    padding: 0.5rem;
+		    justify-content: center;
+		}
+	</style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="sidebar">
-            <h2 class="text-xl font-bold mb-4">Lab Agents</h2>
-            <div id="agent-status">
-                <!-- Agent status will be dynamically populated here -->
-            </div>
-            <div class="chat-controls">
-                <button class="chat-control-btn bg-green-500 hover:bg-green-600 text-white" onclick="newChat()"><i class="fas fa-plus"></i> New Chat</button>
-                <button class="chat-control-btn bg-blue-500 hover:bg-blue-600 text-white" onclick="historyChat()"><i class="fas fa-history"></i> History Chat</button>
-            </div>
-        </div>
-        <div class="main-content">
-            <div class="chat-header">Chemistry Lab AI</div>
-            <div id="chat-messages"></div>
-            <div class="input-area">
+	<div class="chat-container">
+		<div class="sidebar">
+			<div class="sidebar-section">
+				<h3 class="section-title">Chemistry Team</h3>
+				<div id="agent-status">
+					<!-- Agent status will be dynamically populated here -->
+				</div>
+			</div>
+			<div class="sidebar-section">
+				<h3 class="section-title">Chat Controls</h3>
+				<div class="chat-controls">
+					<button class="chat-control-btn new-chat" onclick="newChat()">
+						<i class="fas fa-plus"></i> <span>New Experiment</span>
+					</button>
+					<button class="chat-control-btn history-chat" onclick="historyChat()">
+						<i class="fas fa-history"></i> <span>Past Experiments</span>
+					</button>
+					<button class="chat-control-btn toggle-theme" onclick="toggleTheme()">
+						<i class="fas fa-moon"></i> <span>Toggle Theme</span>
+					</button>
+				</div>
+			</div>
+			<button id="toggle-sidebar" class="toggle-sidebar-btn">
+				<i class="fas fa-chevron-left"></i>
+			</button>
+		</div>
+		<div class="main-content">
+			<div class="chat-header">Advanced Chemistry Lab AI Assistant</div>
+			<div id="chat-messages"></div>
+			<div class="input-area">
                 <div class="input-row">
-                    <input type="text" id="user-input" placeholder="Type your message here...">
+                    <input type="text" id="user-input" placeholder="Ask about your chemistry experiment...">
                     <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
                 </div>
+                <div id="error-message"></div>
                 <div class="input-row">
-                    <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="updateImageName()">
-                    <button class="option-btn" onclick="document.getElementById('image-upload').click()"><i class="fas fa-image"></i> Upload Image</button>
-                    <span id="image-name"></span>
-                    <button class="option-btn" onclick="toggleOption('literature')"><i class="fas fa-book"></i> Set Literature Path</button>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="updateImagePreview()">
+                    <button class="option-btn" onclick="document.getElementById('image-upload').click()">
+                        <i class="fas fa-image"></i> Upload Image
+                    </button>
+                    <button class="option-btn" onclick="toggleOption('literature')">
+                        <i class="fas fa-book"></i> Set Literature Path
+                    </button>
                     <input type="text" id="literature-path" class="option-input" placeholder="Enter Literature Path">
-                    <button class="option-btn" onclick="toggleOption('web-url')"><i class="fas fa-globe"></i> Set Web URL Path</button>
-                    <input type="text" id="web-url-path" class="option-input" placeholder="Enter Web URL Path">
+                    <button class="option-btn" onclick="toggleOption('web-url')">
+                        <i class="fas fa-globe"></i> Set Web URL
+                    </button>
+                    <input type="text" id="web-url-path" class="option-input" placeholder="Enter Web URL">
+                </div>
+                <div id="image-preview-container" style="display: none;">
+                    <img id="image-preview" alt="Uploaded Image">
+                </div>
+            </div>
+		</div>
+	</div>
+    <template id="history-message-template">
+        <div class="message">
+            <div class="agent-avatar"></div>
+            <div class="bubble">
+                <div class="name"></div>
+                <div class="content"></div>
+                <div class="image-container" style="display: none;">
+                    <img class="history-image" alt="Chat history image">
                 </div>
             </div>
         </div>
-    </div>
+    </template>
 
-    <script>
+    <template id="image-error-template">
+        <div class="image-error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Image could not be loaded</span>
+        </div>
+    </template>
+    <template id="molecule-viewer-template">
+        <div class="molecule-modal">
+            <div id="molecule-display-root" class="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 m-4">
+                <div id="molecule-react-component"></div>
+            </div>
+        </div>
+    </template>
+    <script type="text/babel">
+        const getAtomColor = (element) => {
+            const colors = {
+                H: '#FFFFFF',
+                C: '#909090', 
+                N: '#3050F8',
+                O: '#FF0D0D',
+                F: '#90E050',
+                Cl: '#1FF01F',
+                Br: '#A62929',
+                I: '#940094',
+                P: '#FF8000',
+                S: '#FFFF30',
+                B: '#FFB5B5',
+                Na: '#AB5CF2',
+                Mg: '#8AFF00',
+                default: '#808080'
+            };
+            return colors[element] || colors.default;
+        };
+
+        const getContrastColor = (hexcolor) => {
+            const r = parseInt(hexcolor.slice(1,3), 16);
+            const g = parseInt(hexcolor.slice(3,5), 16);
+            const b = parseInt(hexcolor.slice(5,7), 16);
+            
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.5 ? '#000000' : '#FFFFFF';
+        };
+
+        // MoleculeDisplay组件
+        const MoleculeDisplay = ({ moleculeData = {}, viewerRef = null }) => {
+            const data = {
+                formula: moleculeData.formula || 'Unknown',
+                molecular_weight: moleculeData.molecular_weight || 0,
+                logP: moleculeData.logP || 0,
+                TPSA: moleculeData.TPSA || 0,
+                num_rings: moleculeData.num_rings || 0,
+                rotatable_bonds: moleculeData.rotatable_bonds || 0,
+                num_atoms: moleculeData.num_atoms || 0,
+                num_bonds: moleculeData.num_bonds || 0,
+                atoms: moleculeData.atoms || [],
+                smiles: moleculeData.smiles || ''
+            };
+
+            const properties = [
+                {
+                    label: "Formula",
+                    value: data.formula,
+                    icon: "⚛️",
+                    tooltip: "Molecular Formula"
+                },
+                {
+                    label: "Molecular Weight",
+                    value: `${parseFloat(data.molecular_weight).toFixed(2)} g/mol`,
+                    icon: "⚖️",
+                    tooltip: "Molecular Weight in g/mol"
+                },
+                {
+                    label: "LogP",
+                    value: parseFloat(data.logP).toFixed(2),
+                    icon: "📊",
+                    tooltip: "Partition coefficient"
+                },
+                {
+                    label: "TPSA",
+                    value: `${parseFloat(data.TPSA).toFixed(2)} Å²`,
+                    icon: "📐",
+                    tooltip: "Topological Polar Surface Area"
+                },
+                {
+                    label: "Rings",
+                    value: data.num_rings,
+                    icon: "⭕",
+                    tooltip: "Number of rings"  
+                },
+                {
+                    label: "Rotatable Bonds",
+                    value: data.rotatable_bonds,
+                    icon: "🔄",
+                    tooltip: "Number of rotatable bonds"
+                }
+            ];
+
+            const analysis = {
+                lipophilicity: data.logP > 2 ? 'high' : 'moderate',
+                permeability: data.TPSA < 50 ? 'good' : 'limited',
+                flexibility: data.rotatable_bonds > 5 ? 'high' : 'moderate'  
+            };
+            return (
+              <div className="max-w-4xl mx-auto space-y-6">
+                {/* Header */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                      3D Structure Visualization
+                    </h2>
+                    <button 
+                      onClick={() => document.querySelector('.molecule-modal').remove()}
+                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left Column - Structures */}
+              <div className="space-y-6">
+                {/* 3D Structure */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                      3D Structure
+                    </h3>
+                </div>
+                <div 
+                  ref={viewerRef}
+                  className="w-full h-96 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700"
+                  id="molecule-viewer"
+                />
+            </div>
+
+            {/* 2D Structure */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                  2D Structure
+                </h3>
+              </div>
+              <div className="p-4 flex justify-center">
+                <img 
+                  src={`/generate_molecule_image?smiles=${encodeURIComponent(data.smiles)}`}
+                  alt="2D Structure"
+                  className="rounded-lg"
+                  style={{ maxHeight: '384px', objectFit: 'contain' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Atomic Coordinates */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+              Atomic Coordinates
+            </h2>
+          </div>
+          <div className="p-4">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-gray-600">
+                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600 dark:text-gray-200">Atom</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600 dark:text-gray-200">X (Å)</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600 dark:text-gray-200">Y (Å)</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-600 dark:text-gray-200">Z (Å)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {data.atoms.map((atom, index) => (
+                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: getAtomColor(atom.elem),
+                            color: getContrastColor(getAtomColor(atom.elem))
+                          }}>
+                          {atom.elem}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{atom.x.toFixed(3)}</td>
+                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{atom.y.toFixed(3)}</td>
+                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{atom.z.toFixed(3)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Properties and Analysis Grid */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Molecular Properties */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+              Molecular Properties
+            </h2>
+          </div>
+          <div className="p-4">
+            <div className="grid gap-4">
+              {properties.map((prop, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  title={prop.tooltip}
+                >
+                  <span className="text-2xl mr-3">{prop.icon}</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      {prop.label}
+                    </span>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      {prop.value}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Structure Analysis */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+              Structure Analysis
+            </h2>
+          </div>
+          <div className="p-4">
+            <ul className="space-y-3 text-gray-700 dark:text-gray-300">
+              <li className="flex items-center">
+                <span className="mr-2">🔍</span>
+                {`LogP indicates ${analysis.lipophilicity} lipophilicity`}
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2">🎯</span>
+                {`TPSA suggests ${analysis.permeability} membrane permeability`}
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2">🔄</span>
+                {`${data.rotatable_bonds} rotatable bonds indicate ${analysis.flexibility} flexibility`}
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2">⭕</span>
+                {`Contains ${data.num_rings} ring${data.num_rings !== 1 ? 's' : ''} in the structure`}
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2">⚖️</span>
+                {`Molecular weight: ${data.molecular_weight > 500 ? 'High' : 'Moderate'}`}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+        window.MoleculeDisplay = MoleculeDisplay;
+        const processedSMILES = new Set();
+        const agentFeedbackOptions = {
+            Lab_Director: [
+            { icon: '⚛️', label: 'Atomic Brilliance', value: 5, description: 'Exceptional accuracy and detail in results' },
+            { icon: '🧪', label: 'Catalytic Impact', value: 4, description: 'Well-rounded approach with good reliability' },
+            { icon: '🔬', label: 'Stable Reaction', value: 3, description: 'Meets basic requirements and expectations' },
+            { icon: '⚗️', label: 'Mixed Results', value: 2, description: 'Results need improvement' },
+            { icon: '💨', label: 'Volatile Output', value: 1, description: 'Significant issues need addressing' }
+            ],
+            Senior_Chemist: [
+            { icon: '🧬', label: 'Perfect Synthesis', value: 5, description: 'Outstanding chemical analysis and synthesis' },
+            { icon: '🔋', label: 'High Reactivity', value: 4, description: 'Effective chemical processing and control' },
+            { icon: '📊', label: 'Good Yield', value: 3, description: 'Standard chemical procedures followed' },
+            { icon: '🌡️', label: 'Unstable Mix', value: 2, description: 'Chemical process needs refinement' },
+            { icon: '☢️', label: 'Failed Reaction', value: 1, description: 'Major issues in chemical handling' }
+            ],
+            Lab_Manager: [
+            { icon: '🎯', label: 'Pure Precision', value: 5, description: 'Perfect management and coordination' },
+            { icon: '⚖️', label: 'Balanced Process', value: 4, description: 'Efficient resource utilization' },
+            { icon: '📏', label: 'Standard Results', value: 3, description: 'Adequate lab management' },
+            { icon: '📉', label: 'Below Standard', value: 2, description: 'Management needs improvement' },
+            { icon: '⚠️', label: 'Poor Control', value: 1, description: 'Significant management issues' }
+            ],
+            Safety_Officer: [
+            { icon: '🛡️', label: 'Maximum Safety', value: 5, description: 'Exceptional safety protocols maintained' },
+            { icon: '🦺', label: 'Well Protected', value: 4, description: 'Good safety measures in place' },
+            { icon: '🚥', label: 'Caution Noted', value: 3, description: 'Basic safety requirements met' },
+            { icon: '⚡', label: 'Risk Present', value: 2, description: 'Safety concerns need addressing' },
+            { icon: '💥', label: 'Hazardous', value: 1, description: 'Critical safety issues present' }
+            ],
+            Analytical_Chemist: [
+            { icon: '📈', label: 'Peak Analysis', value: 5, description: 'Superior analytical performance' },
+            { icon: '🔍', label: 'Clear Data', value: 4, description: 'Good analytical accuracy' },
+            { icon: '📊', label: 'Mixed Signals', value: 3, description: 'Standard analytical results' },
+            { icon: '❓', label: 'Unclear Data', value: 2, description: 'Analysis needs improvement' },
+            { icon: '❌', label: 'Invalid Results', value: 1, description: 'Unreliable analysis results' }
+            ]
+        };
+
+        // FeedbackButton component
+        const FeedbackButton = ({ option, onClick, isSelected, isHovered, onHover }) => (
+            <button
+                onClick={() => onClick(option.value)}
+                onMouseEnter={() => onHover(option.value)}
+                onMouseLeave={() => onHover(null)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+                    ${isHovered || isSelected 
+                        ? 'bg-blue-50 dark:bg-blue-900/20' 
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                    }`}
+            >
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40">
+                    {option.icon}
+                </span>
+                <div className="flex-1 text-left">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {option.label}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {option.value}/5
+                    </div>
+                </div>
+            </button>
+        );
+
+        const PersonalizedFeedback = ({ agentName, onSubmit }) => {
+            const [isExpanded, setIsExpanded] = React.useState(false);
+            const [selectedValue, setSelectedValue] = React.useState(null); 
+            const [hoveredValue, setHoveredValue] = React.useState(null);
+
+            const handleSelect = (value) => {
+                setSelectedValue(value);
+                onSubmit(value);
+                setIsExpanded(false);
+            };
+
+            return (
+                <div className="mt-4 relative">
+                    <button 
+                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium 
+                                  transition-all duration-200 ease-in-out
+                                  bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 
+                                  dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 
+                                  dark:hover:text-blue-300"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={2}
+                                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" 
+                            />
+                        </svg>
+                        {selectedValue ? `Rated ${selectedValue}/5` : 'Rate Response'}
+                    </button>
+                    
+                    {isExpanded && (
+                        <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-gray-800 
+                                      rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 
+                                      p-4 min-w-[280px] z-10">
+                            <div className="space-y-2">
+                                {agentFeedbackOptions[agentName].map((option) => (
+                                    <FeedbackButton
+                                        key={option.value}
+                                        option={option}
+                                        onClick={handleSelect}
+                                        isSelected={selectedValue === option.value}
+                                        isHovered={hoveredValue === option.value}
+                                        onHover={setHoveredValue}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        class MoleculeViewer {
+            constructor() {
+                this.currentViewer = null;
+                this.currentModal = null;
+            }
+
+            async show(smiles) {
+                try {
+                    await this.createModal(smiles);
+                    await this.loadMoleculeInfo(smiles);
+                    await this.initialize3DViewer(smiles);
+                    this.setupEventListeners();
+                } catch (error) {
+                    console.error('Error showing molecule:', error);
+                    this.showError(error.message);
+                }
+            }
+
+            async createModal(smiles) {
+                const template = document.getElementById('molecule-viewer-template');
+                const modal = template.content.cloneNode(true);
+                document.body.appendChild(modal);
+            
+                this.currentModal = document.querySelector('.molecule-modal');
+                this.currentModal.dataset.smiles = smiles;
+            }
+
+            async loadMoleculeInfo(smiles) {
+                try {
+                    const response = await fetch('/get_molecule_info', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ smiles })
+                    });
+
+                    if (!response.ok) throw new Error('Failed to load molecule info');
+                    
+                    const data = await response.json();
+                    
+                    // Update molecule information
+                    document.getElementById('molecule-formula').textContent = data.formula;
+                    document.getElementById('molecule-weight').textContent = `${data.molecular_weight} g/mol`;
+                    document.getElementById('molecule-atoms').textContent = data.num_atoms;
+                    document.getElementById('molecule-bonds').textContent = data.num_bonds;
+                    document.getElementById('molecule-rings').textContent = data.num_rings;
+                    document.getElementById('molecule-logp').textContent = data.logP.toFixed(2);
+                    document.getElementById('molecule-tpsa').textContent = `${data.TPSA} Å²`;
+                    document.getElementById('molecule-rotatable').textContent = data.rotatable_bonds;
+                    
+                } catch (error) {
+                    const infoDiv = this.currentModal.querySelector('.molecule-info');
+                    infoDiv.innerHTML = `
+                        <div class="bg-red-100 border border-red-400 text-red-700 p-4 rounded">
+                            <p>Error loading molecule information: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            async initialize3DViewer(smiles) {
+                const viewerContainer = this.currentModal.querySelector('#molecule-viewer');
+                viewerContainer.innerHTML = '<div class="loading-spinner"></div>';
+
+                try {
+                    const response = await fetch('/get_3d_structure', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ smiles })
+                    });
+
+                    if (!response.ok) throw new Error('Failed to load 3D structure');
+                
+                    const data = await response.json();
+
+                    this.currentViewer = $3Dmol.createViewer(viewerContainer, {
+                        backgroundColor: "white",
+                        antialias: true
+                    });
+
+                    this.currentViewer.addModel(data.structure, "JSON");
+                    this.currentViewer.setStyle({}, {
+                        stick: { radius: 0.15, colorscheme: 'Jmol' },
+                        sphere: { radius: 0.35 }
+                    });
+                    this.currentViewer.zoomTo();
+                    this.currentViewer.render();
+
+                } catch (error) {
+                    viewerContainer.innerHTML = `<div class="text-red-500">Error loading 3D structure: ${error.message}</div>`;
+                }
+            }
+
+            setupEventListeners() {
+                this.currentModal.querySelector('.close-modal-btn').onclick = () => this.close();
+
+                this.currentModal.querySelector('.copy-smiles-btn').onclick = () => {
+                    const smiles = this.currentModal.dataset.smiles;
+                    navigator.clipboard.writeText(smiles)
+                        .then(() => alert('SMILES copied to clipboard!'))
+                        .catch(err => console.error('Failed to copy:', err));
+                };
+
+                this.currentModal.onclick = (e) => {
+                    if (e.target === this.currentModal) this.close();
+                };
+            }
+
+            close() {
+                if (this.currentViewer) {
+                    this.currentViewer.clear();
+                    this.currentViewer = null;
+                }
+                if (this.currentModal) {
+                    document.body.removeChild(this.currentModal);
+                    this.currentModal = null;
+                }
+            }
+
+            showError(message) {
+                if (this.currentModal) {
+                    const content = this.currentModal.querySelector('.molecule-modal-content');
+                    content.innerHTML = `
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                            <p class="font-bold">Error</p>
+                            <p>${message}</p>
+                        </div>
+                        <div class="mt-4">
+                            <button class="close-modal-btn bg-gray-500 text-white px-4 py-2 rounded">
+                                Close
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        const moleculeViewer = new MoleculeViewer();
+
+        // Main JavaScript code
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
@@ -311,7 +2763,12 @@
         const literaturePath = document.getElementById('literature-path');
         const webUrlPath = document.getElementById('web-url-path');
         const imageUpload = document.getElementById('image-upload');
-        const imageName = document.getElementById('image-name');
+        const imagePreview = document.getElementById('image-preview');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+
         const avatars = {
             'User': "/static/images/user-avatar.png",
             'Lab_Director': '/static/images/lab-director-avatar.png',
@@ -323,132 +2780,1112 @@
         };
 
         let agents = [
-            { name: 'Lab_Director', evolutionLevel: 1 },
-            { name: 'Senior_Chemist', evolutionLevel: 1 },
-            { name: 'Lab_Manager', evolutionLevel: 1 },
-            { name: 'Safety_Officer', evolutionLevel: 1 },
-            { name: 'Analytical_Chemist', evolutionLevel: 1 }
+            { name: 'Lab_Director', evolutionLevel: 1, skills: ['Leadership', 'Project Management'] },
+            { name: 'Senior_Chemist', evolutionLevel: 1, skills: ['Organic Chemistry', 'Inorganic Chemistry'] },
+            { name: 'Lab_Manager', evolutionLevel: 1, skills: ['Resource Management', 'Safety Protocols']},
+            { name: 'Safety_Officer', evolutionLevel: 1, skills: ['Risk Assessment', 'Safety Training'] },
+            { name: 'Analytical_Chemist', evolutionLevel: 1, skills: ['Spectroscopy', 'Chromatography'] }
         ];
 
         function updateAgentStatus() {
             agentStatus.innerHTML = agents.map(agent => `
-                <div class="agent-info">
-                    <img src="${avatars[agent.name]}" alt="${agent.name}" class="agent-avatar">
-                    <span>${agent.name.replace('_', ' ')} (Level ${agent.evolutionLevel})</span>
+            <div class="agent-info" id="${agent.name}-info">
+                <div class="agent-avatar" style="background-image: url('${avatars[agent.name]}')"></div>
+                <div class="agent-details">
+                    <div class="agent-name">${agent.name.replace('_', ' ')}</div>
+                    <div class="agent-level">Level ${agent.evolutionLevel}</div>
+                    <div class="level-progress">
+                        <div class="level-progress-bar" style="width: ${(agent.evolutionLevel / 5) * 100}%"></div>
+                    </div>
+                    <div class="agent-skills">
+                        ${agent.skills.map(skill => `<span class="agent-skill">${skill}</span>`).join(', ')}
+                    </div>
                 </div>
+            </div>
             `).join('');
         }
 
-        updateAgentStatus();
+        function showResultDetails(element, result) {
+            const modal = document.createElement('div');
+            modal.className = 'result-modal-overlay';
+            
+            modal.innerHTML = `
+                <div class="result-modal-card">
+                    <button class="result-modal-close" onclick="this.closest('.result-modal-overlay').remove()">
+                        &times;
+                    </button>
+                    
+                    <h3 class="result-modal-title">
+                        ${escapeHtml(result.title)}
+                    </h3>
+                    
+                    <div class="result-modal-content">
+                        ${escapeHtml(result.content)}
+                    </div>
+                    
+                    ${result.url ? 
+                        `<a href="${escapeHtml(result.url)}" target="_blank" class="result-modal-url">
+                            ${escapeHtml(result.url)}
+                        </a>` 
+                        : ''
+                    }
+                </div>
+            `;
 
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            document.body.appendChild(modal);
+        }
+
+        function validateSmiles(smiles) {
+            const validChars = /^[A-Za-z0-9@+\-\[\]\(\)\\\/%=#$.,*~{}:]+$/;
+            if (!validChars.test(smiles)) {
+                console.error("SMILES contains invalid characters");
+                return false;
+            }
+
+            let bracketCount = 0;
+            let parenthesesCount = 0;
+            for (let char of smiles) {
+                if (char === '[') bracketCount++;
+                if (char === ']') bracketCount--;
+                if (char === '(') parenthesesCount++;
+                if (char === ')') parenthesesCount--;
+                if (bracketCount < 0 || parenthesesCount < 0) {
+                    console.error("SMILES has mismatched brackets or parentheses");
+                    return false;
+                }
+            }
+            if (bracketCount !== 0 || parenthesesCount !== 0) {
+                console.error("SMILES has unmatched brackets or parentheses");
+                return false;
+            }
+
+            const atomSymbols = smiles.match(/\[([^\]]+)\]|Br|Cl|[BCNOFPSI]|[bcnosp]/g);
+            if (atomSymbols) {
+                const validAtoms = new Set(['B', 'C', 'N', 'O', 'F', 'P', 'S', 'I', 'Cl', 'Br',
+                                            'b', 'c', 'n', 'o', 'p', 's']);
+                for (let atom of atomSymbols) {
+                    atom = atom.replace(/[\[\]]/g, '');
+                    if (!validAtoms.has(atom)) {
+                        console.error(`Invalid atom symbol: ${atom}`);
+                        return false;
+                    }
+                }
+            }
+
+            const aromaticAtoms = smiles.match(/[bcnosp]/g);
+            const aromaticBonds = smiles.match(/:/g);
+            if ((aromaticAtoms && !aromaticBonds) || (!aromaticAtoms && aromaticBonds)) {
+                console.error("Inconsistent aromaticity in SMILES");
+                return false;
+            }
+
+            if (smiles.length > 1000) {
+                console.error("SMILES string is too long (>1000 characters)");
+                return false;
+            }
+            const rings = smiles.match(/\d/g);
+            if (rings) {
+                const ringCounts = {};
+                for (let ring of rings) {
+                    ringCounts[ring] = (ringCounts[ring] || 0) + 1;
+                }
+                for (let count of Object.values(ringCounts)) {
+                    if (count % 2 !== 0) {
+                        console.error("SMILES has unpaired ring closures");
+                        return false;
+                    }
+                }
+            }
+            if (!/^([BCNOFPSI]|Br|Cl|[bcnosp]|\[)/.test(smiles)) {
+                console.error("SMILES does not start with a valid atom");
+                return false;
+            }
+            return true;
+        }
+
+        function handleSmilesInput(smiles) {
+            if (validateSmiles(smiles)) {
+                console.log("SMILES is valid:", smiles);
+                openMoleculeModal(smiles);
+            } else {
+                console.error("Invalid SMILES string:", smiles);
+                alert("The SMILES string is invalid. Please check your input and try again.");
+            }
+        }
+
+        async function openMoleculeModal(smilesEncoded) {
+            let modalElement = null;
+            let viewer = null;
+
+            const cleanup = () => {
+                if (viewer) {
+                    viewer.clear();
+                    viewer = null;
+                }
+                if (modalElement && modalElement.parentNode) {
+                    modalElement.remove();
+                }
+            };
+
+            try {
+                if (!smilesEncoded) {
+                    throw new Error('SMILES string is required');
+                }
+
+                const smiles = decodeURIComponent(smilesEncoded);
+                if (!smiles.trim()) {
+                    throw new Error('Invalid SMILES string: empty string');
+                }
+                cleanup();
+                const template = document.getElementById('molecule-viewer-template');
+                if (!template) {
+                    throw new Error('Molecule viewer template not found');
+                }
+
+                modalElement = template.content.cloneNode(true).querySelector('.molecule-modal');
+                if (!modalElement) {
+                    throw new Error('Invalid template structure');
+                }
+                modalElement.addEventListener('click', (e) => {
+                    if (e.target === modalElement) {
+                        cleanup();
+                    }
+                });
+                const handleEscape = (e) => {
+                    if (e.key === 'Escape') {
+                        cleanup();
+                        document.removeEventListener('keydown', handleEscape);
+                    }
+                };
+                document.addEventListener('keydown', handleEscape);
+
+                document.body.appendChild(modalElement);
+
+                const rootElement = modalElement.querySelector('#molecule-react-component');
+                if (!rootElement) {
+                    throw new Error('React root element not found');
+                }
+
+                rootElement.innerHTML = `
+                    <div class="flex items-center justify-center p-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <span class="ml-2">Loading molecule data...</span>
+                    </div>
+                `;
+
+                const response = await fetch('/get_molecule_details', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ smiles }),
+                    timeout: 10000 
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch molecule details: ${response.statusText}`);
+                }
+
+                const moleculeData = await response.json();
+                if (!moleculeData || !moleculeData.pdb) {
+                    throw new Error('Invalid molecule data received');
+                }
+                moleculeData.smiles = smiles;
+                const viewerRef = React.createRef();
+
+                ReactDOM.render(
+                    <MoleculeDisplay 
+                        moleculeData={moleculeData}
+                        viewerRef={viewerRef}
+                        onClose={cleanup}
+                    />,
+                    rootElement
+                );
+
+                await new Promise((resolve, reject) => {
+                    let attempts = 0;
+                    const maxAttempts = 3;
+                    
+                    const initViewer = () => {
+                        try {
+                            if (viewerRef.current) {
+                                viewer = $3Dmol.createViewer(viewerRef.current, {
+                                    backgroundColor: document.body.classList.contains('dark-mode') 
+                                        ? '#1f2937' 
+                                        : 'white'
+                                });
+
+                                viewer.addModel(moleculeData.pdb, "pdb");
+                                viewer.setStyle({}, {
+                                    stick: { radius: 0.15, colorscheme: 'Jmol' },
+                                    sphere: { radius: 0.35 }
+                                });
+                                viewer.zoomTo();
+                                viewer.render();
+                                resolve();
+                            } else if (attempts < maxAttempts) {
+                                attempts++;
+                                setTimeout(initViewer, 100);
+                            } else {
+                                reject(new Error('Failed to initialize 3D viewer'));
+                            }
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+
+                    initViewer();
+                });
+
+            } catch (error) {
+                console.error('Error in openMoleculeModal:', error);
+                cleanup();
+                showToast(`Failed to open molecule viewer: ${error.message}`, 'error');
+                
+                if (modalElement && modalElement.parentNode) {
+                    const errorContent = `
+                        <div class="p-4 bg-red-100 dark:bg-red-900 rounded-lg">
+                            <h3 class="text-red-800 dark:text-red-200 font-semibold">Error</h3>
+                            <p class="text-red-600 dark:text-red-300">${error.message}</p>
+                        </div>
+                    `;
+                    modalElement.querySelector('#molecule-react-component').innerHTML = errorContent;
+                }
+            }
+
+            return cleanup;
+        }
+        
+        function validateMoleculeData(data) {
+            if (!data || typeof data !== 'object') {
+                throw new Error('Invalid molecule data format');
+            }
+    
+            if (!Array.isArray(data.atoms) || !Array.isArray(data.bonds)) {
+                throw new Error('Missing atoms or bonds data');
+            }
+    
+            if (data.atoms.length === 0) {
+                throw new Error('No atoms found in molecule data');
+            }
+    
+            return true;
+        }
+
+        async function convertSmilesToMolfile(smiles) {
+            try {
+                const response = await fetch('/convert_smiles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ smiles: smiles }),
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to convert SMILES to 3D structure');
+                }
+                return await response.text();
+            } catch (error) {
+                console.error('Error converting SMILES to 3D:', error);
+                throw error;
+            }
+        }
+                
+        function initializeMoleculeViewers() {
+            document.querySelectorAll('[data-smiles]').forEach(async element => {
+            if (!element.hasAttribute('data-initialized')) {
+                const smiles = element.getAttribute('data-smiles');
+                if (smiles) {
+                const decodedSmiles = decodeURIComponent(smiles);
+                try {
+                    const isValid = await preSmilesCheck(decodedSmiles);
+                    if (isValid) {
+                    element.addEventListener('click', function() {
+                        verifyAndOpenMoleculeModal(decodedSmiles);
+                    });
+                    element.setAttribute('data-initialized', 'true');
+                    } else {
+                    element.classList.remove('molecule-ref');
+                    element.removeAttribute('data-smiles');
+                    const viewButton = element.querySelector('.view-3d-btn');
+                    if (viewButton) {
+                        viewButton.remove();
+                    }
+                    }
+                } catch (error) {
+                    console.error('Error initializing molecule viewer:', error);
+                    element.classList.remove('molecule-ref');
+                    element.removeAttribute('data-smiles');
+                    const viewButton = element.querySelector('.view-3d-btn');
+                    if (viewButton) {
+                    viewButton.remove();
+                    }
+                }
+                }
+            }
+            });
+
+            document.querySelectorAll('.view-3d-btn:not([data-initialized])').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                
+                const smilesElement = this.closest('[data-smiles]');
+                if (!smilesElement) return;
+
+                const smiles = smilesElement.getAttribute('data-smiles');
+                if (!smiles) return;
+
+                const decodedSmiles = decodeURIComponent(smiles);
+                try {
+                const isValid = await preSmilesCheck(decodedSmiles);
+                if (isValid) {
+                    await verifyAndOpenMoleculeModal(decodedSmiles);
+                } else {
+                    showToast('Unable to display 3D structure for this molecule', 'error');
+                }
+                } catch (error) {
+                console.error('Error opening molecule viewer:', error);
+                showToast('Failed to open molecule viewer', 'error');
+                }
+            });
+            btn.setAttribute('data-initialized', 'true');
+            });
+        }
+        
         function addMessage(role, name, content, imageData = null, searchResults = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}`;
             const avatarSrc = avatars[name] || '/static/images/system-avatar.png';
+            content = processSmilesInText(content);
+
             let messageContent = `
-                <img src="${avatarSrc}" alt="${name}" class="avatar" onerror="this.src='/static/images/system-avatar.png'">
+                <div class="agent-avatar" style="background-image: url('${avatarSrc}')"></div>
                 <div class="bubble">
                     <div class="name">${name.replace('_', ' ')}</div>
                     <div>${content}</div>
             `;
 
             if (imageData) {
-                console.log("Adding image to message:", imageData ? imageData.slice(0, 50) + "..." : "No image data");
-                messageContent += `<img src="${imageData}" alt="Uploaded Image" style="max-width: 100%; margin-top: 10px;">`;
+                messageContent += `
+                    <div class="uploaded-image-container">
+                       <img src="${imageData}" alt="Uploaded Image" class="uploaded-image">
+                    </div>
+                `;
             }
 
             if (searchResults && searchResults.length > 0) {
                 messageContent += `
-                <div class="search-results">
-                    <h3 class="text-lg font-bold mb-2">Web Search Results:</h3>
-                    ${searchResults.map((result, index) => `
-                        <div class="search-result">
-                            <div class="search-result-title">
-                                ${index + 1}. <a href="${result.url}" target="_blank">${result.title || 'Untitled'}</a>
+                    <div class="search-results-container">
+                        <div class="search-section">
+                            <div class="section-header">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <h2 class="text-xl font-semibold">Search Results</h2>
                             </div>
-                            <div class="search-result-url">
-                                <a href="${result.url}" target="_blank">${result.url}</a>
-                            </div>
-                            <div class="search-result-content">${result.content}</div>
-                            <div class="search-result-summary">
-                                Summary: ${result.summary || 'No summary available.'}
-                            </div>
-                            <div class="search-result-actions">
-                                <button class="search-result-action" onclick="copyToClipboard('${result.url}')">Copy URL</button>
-                                <button class="search-result-action" onclick="toggleSummary(${index})">Toggle Summary</button>
+                            <div class="results-list">
+                                ${searchResults.map(searchGroup => `
+                                    <div class="search-group">
+                                        <div class="group-header">
+                                            <div class="icon-wrapper">
+                                                <i class="fas ${searchGroup.type === 'rag' ? 'fa-book' : 'fa-globe'}"></i>
+                                            </div>
+                                            <span class="font-semibold text-lg">
+                                                ${searchGroup.type === 'rag' ? 'Literature' : 'Web'} Results
+                                            </span>
+                                        </div>
+                                        <div class="search-items">
+                                            ${searchGroup.results.map(result => `
+                                                <div class="result-item search-result-item" onclick="showResultDetails(this, ${JSON.stringify(result).replace(/"/g, '&quot;')})">
+                                                    <div class="title-row">
+                                                        ${result.url ? `
+                                                            <a href="${escapeHtml(result.url)}" target="_blank" class="result-link" onclick="event.stopPropagation()">
+                                                                ${escapeHtml(result.title)}
+                                                            </a>` : 
+                                                            `<span class="result-title">${escapeHtml(result.title)}</span>`
+                                                        }
+                                                    </div>
+                                                    <div class="result-preview">
+                                                        ${escapeHtml(result.content.substring(0, 150))}...
+                                                    </div>
+                                                </div>
+                                            `).join('')}    
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
-                    `).join('')}
-                </div>`;
+                    </div>`;
             }
-
+                    
             messageContent += `</div>`;
             messageDiv.innerHTML = messageContent;
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            updateSmilesElements();
 
-            if (role === 'assistant') {
-                const feedbackDiv = document.createElement('div');
-                feedbackDiv.className = 'feedback-buttons';
-                feedbackDiv.innerHTML = `
-                    <button class="feedback-button bg-green-500 text-white" onclick="provideFeedback('good')"><i class="fas fa-thumbs-up"></i> Good</button>
-                    <button class="feedback-button bg-yellow-500 text-white" onclick="provideFeedback('average')"><i class="fas fa-meh"></i> Average</button>
-                    <button class="feedback-button bg-red-500 text-white" onclick="provideFeedback('poor')"><i class="fas fa-thumbs-down"></i> Poor</button>
-                `;
-                chatMessages.appendChild(feedbackDiv);
+            if (role === 'assistant' && name !== 'System' && name.toLowerCase() !== 'chat manager' && name.toLowerCase() !== 'chat_manager') {
+                const feedbackContainer = document.createElement('div');
+                feedbackContainer.className = 'message-feedback-container';
+                messageDiv.appendChild(feedbackContainer);
+                addFeedbackButtons(feedbackContainer, name);
+            }
+
+            if (!searchResults) {
+                initializeMoleculeViewers();
             }
         }
+
+            function addFeedbackButtons(messageDiv, agentName) {
+                if (agentName === 'chat manager' || agentName === 'Chat Manager' || agentName === 'System') return;
+
+                const buttonContainer = document.createElement('div');
+                buttonContainer.className = 'message-feedback-container';
+
+                const feedbackWrapper = document.createElement('div');
+                feedbackWrapper.className = 'feedback-wrapper';
+
+                const feedbackToggle = document.createElement('button'); 
+                feedbackToggle.className = 'feedback-toggle-btn';
+                feedbackToggle.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4">
+                        <path stroke="currentColor" stroke-width="2" fill="none" 
+                            d="M12 2L14.85 7.94L21 8.78L16.5 13.47L17.77 19.66L12 16.87L6.23 19.66L7.5 13.47L3 8.78L9.15 7.94L12 2Z"/>
+                    </svg>
+                    <span>Rate Response</span>
+                `;
+
+                let feedbackPanel = null;
+                let selectedRating = null;
+
+                feedbackToggle.onclick = (e) => {
+                    e.stopPropagation();
+                    
+                    if (feedbackPanel) {
+                        feedbackPanel.remove();
+                        feedbackPanel = null;
+                        return;
+                    }
+
+                    feedbackPanel = document.createElement('div');
+                    feedbackPanel.className = 'feedback-panel';
+
+                    const options = agentFeedbackOptions[agentName];
+                    feedbackPanel.innerHTML = options.map(option => `
+                        <div class="feedback-option ${selectedRating === option.value ? 'selected' : ''}" 
+                            data-value="${option.value}">
+                            <div class="feedback-icon">${option.icon}</div>
+                            <div class="feedback-content">
+                                <div class="feedback-label">${option.label}</div>
+                                <div class="feedback-score">${option.value}/5</div>
+                                <div class="feedback-description">${option.description}</div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    feedbackWrapper.appendChild(feedbackPanel);
+
+                    const messageRect = messageDiv.getBoundingClientRect();
+                    const buttonRect = feedbackToggle.getBoundingClientRect();
+                    
+                    requestAnimationFrame(() => {
+                        const panelRect = feedbackPanel.getBoundingClientRect();
+                        if (buttonRect.top - panelRect.height < 0) {
+                            feedbackPanel.style.bottom = 'auto';
+                            feedbackPanel.style.top = '100%';
+                            feedbackPanel.classList.add('panel-bottom');
+                        }
+                    });
+
+                    const feedbackOptions = feedbackPanel.querySelectorAll('.feedback-option');
+                    feedbackOptions.forEach(option => {
+                        option.onclick = async (e) => {
+                            e.stopPropagation();
+                            const value = parseInt(option.dataset.value);
+                            selectedRating = value;
+                            
+                            feedbackOptions.forEach(opt => {
+                                opt.classList.toggle('selected', 
+                                    parseInt(opt.dataset.value) === value);
+                            });
+
+                            feedbackToggle.className = 'feedback-toggle-btn rated';
+                            feedbackToggle.innerHTML = `
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4">
+                                    <path fill="currentColor" 
+                                        d="M12 2L14.85 7.94L21 8.78L16.5 13.47L17.77 19.66L12 16.87L6.23 19.66L7.5 13.47L3 8.78L9.15 7.94L12 2Z"/>
+                                </svg>
+                                <span>Rated ${value}/5</span>
+                            `;
+                            
+                            await provideFeedback(agentName, value);
+                            
+                            setTimeout(() => {
+                                feedbackPanel.remove();
+                                feedbackPanel = null;
+                            }, 300);
+                        };
+                    });
+                };
+                feedbackWrapper.appendChild(feedbackToggle);
+                messageDiv.appendChild(feedbackWrapper);
+                messageDiv.appendChild(buttonContainer);
+
+                document.addEventListener('click', (e) => {
+                    if (feedbackPanel && !feedbackWrapper.contains(e.target)) {
+                        feedbackPanel.remove();
+                        feedbackPanel = null;
+                    }
+                });
+            }
+
+            window.addEventListener('resize', () => {
+                if (feedbackPanel) {
+                    const wrapperRect = feedbackWrapper.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+
+                    if (wrapperRect.right + 320 > viewportWidth) {
+                        feedbackPanel.style.right = '0';
+                        feedbackPanel.style.left = 'auto';
+                    }
+                }
+            });
+            
+        async function provideFeedback(agentName, feedbackScore) {
+            try {
+            const response = await fetch('/feedback', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ [agentName]: feedbackScore })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json(); 
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Feedback response:", data);
+
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'feedback-success-message';
+            successMessage.textContent = 'Thank you for your feedback!';
+            chatMessages.appendChild(successMessage);
+
+            // Remove success message after 3 seconds 
+            setTimeout(() => {
+                successMessage.remove();
+            }, 3000);
+
+            } catch (error) {
+            console.error('Error sending feedback:', error);
+            // Show error message in chat
+            addMessage('system', 'System', `[SYSTEM]An error occurred while sending your feedback: ${error.message}. Please try again.`);
+            }
+        }
+
+        function processContent(content) {
+            content = processSmilesInText(content);
+
+            if (content.startsWith('[SYSTEM]')) {
+                return `<div class="system-message">${content.replace('[SYSTEM]', '')}</div>`;
+            }
+            
+            return content;
+        }
+        
+        function processSmilesInText(text, context = 'default') {
+            if (!text) return text;
+
+            // If the context is search-results, return the text as-is
+            if (context === 'search-results') {
+                return text;
+            }
+
+            // Enhanced validation and filtering function 
+            function isValidSmiles(smiles) {
+                // Skip empty or too long strings
+                if (!smiles || typeof smiles !== 'string' || smiles.length < 2 || smiles.length > 1000) {
+                    return false;
+                }
+
+                // Skip strings with "SMILES:" prefix
+                if (smiles.toUpperCase().startsWith('SMILES:')) {
+                    return false;
+                }
+
+                // Skip common non-SMILES patterns
+                const nonSmilesPatterns = [
+                    /\.(pdf|doc|docx|txt|csv)$/i,         // File extensions
+                    /^(?:https?:\/\/|www\.)/i,            // URLs 
+                    /^(?:\/[a-z0-9]+)+$/i,                // File paths
+                    /^(?:file|document|section|page)/i     // Document terms
+                ];
+
+                if (nonSmilesPatterns.some(pattern => pattern.test(smiles))) {
+                    return false;
+                }
+
+                // Skip common non-chemical terms
+                const excludedTerms = new Set([
+                    'SMILES', 'SMILE', 'SMILING', 'PDF', 'DOC', 'DOCX', 'XLS', 'XLSX',
+                    'TXT', 'CSV', 'MOL', 'SDF', 'CIF', 'PDB', 'LOG', 'INP', 'OUT',
+                    'THE', 'AND', 'FOR', 'WITH', 'FROM', 'INTO', 'THAT', 'THIS',
+                    'WHAT', 'WHEN', 'WHERE', 'WHY', 'HOW'
+                ]);
+
+                if (excludedTerms.has(smiles.toUpperCase())) {
+                    return false; 
+                }
+
+                // Basic character validation
+                if (smiles.includes(' ') || /[^A-Za-z0-9@+\-\[\]\(\)\\/%=#$.,*~{}:]/.test(smiles)) {
+                    return false;
+                }
+
+                // Must start with valid atom
+                const validStartRegex = /^(?:[BCNOFPSI]|Br|Cl|[bcnosp]|\[)/;
+                if (!validStartRegex.test(smiles)) {
+                    return false;
+                }
+
+                // Must contain chemical structure indicators
+                const hasChemicalFeatures = /[-=#$:.\[\]()+\/{}@]/.test(smiles) ||
+                                          /[0-9]/.test(smiles) ||
+                                          smiles.includes('Cl') ||
+                                          smiles.includes('Br');
+                if (!hasChemicalFeatures) {
+                    return false;
+                }
+
+                // Check bracket/parenthesis balance
+                let bracketCount = 0;
+                let parenthesesCount = 0;
+                for (let char of smiles) {
+                    if (char === '[') bracketCount++;
+                    if (char === ']') bracketCount--;
+                    if (char === '(') parenthesesCount++;
+                    if (char === ')') parenthesesCount--;
+                    if (bracketCount < 0 || parenthesesCount < 0) {
+                        return false;
+                    }
+                }
+                if (bracketCount !== 0 || parenthesesCount !== 0) {
+                    return false;
+                }
+
+                // Ring number validation
+                const rings = smiles.match(/\d/g);
+                if (rings) {
+                    const ringCounts = {};
+                    for (let ring of rings) {
+                        ringCounts[ring] = (ringCounts[ring] || 0) + 1;
+                    }
+                    for (let count of Object.values(ringCounts)) {
+                        if (count % 2 !== 0) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            // Pattern that looks for potential SMILES strings
+            const smilesPattern = /\b(?:[CNOPSBFIKLi]|[CNOPSBFIKLi][a-z]|Cl|Br|Na|Mg|Al|Si|Ca|Fe|Zn|Se|Ag|Sn|Au|Hg|Pb)(?:[0-9]*[A-Z][a-z]?|[0-9]+|[-=#$:.\[\]()+\/{}@]|\([^)]*\))*\b/g;
+
+            // Track processed positions to avoid double processing
+            const processedPositions = new Set();
+
+            return text.replace(smilesPattern, (match, offset) => {
+                // Skip if already processed
+                if (processedPositions.has(offset)) {
+                    return match;
+                }
+
+                // Check for "SMILES:" prefix in context
+                const contextStart = Math.max(0, offset - 7);
+                const prevText = text.slice(contextStart, offset);
+                if (prevText.toUpperCase().includes('SMILES:')) {
+                    return match;
+                }
+
+                // Skip if match is part of a URL or file path
+                const contextEnd = Math.min(text.length, offset + match.length + 20);
+                const nextText = text.slice(offset, contextEnd);
+                if (nextText.includes('://') || nextText.includes('/')) {
+                    return match;
+                }
+
+                // Skip if it's part of a common text pattern
+                if (match.includes('-') || match.includes('/') || match.endsWith('.') || /^[0-9]/.test(match)) {
+                    return match;
+                }
+
+                // Validate SMILES structure
+                if (!isValidSmiles(match)) {
+                    return match;
+                }
+
+                // Mark position as processed
+                processedPositions.add(offset);
+
+                // Process valid SMILES for normal context
+                if (window.processedSMILES && window.processedSMILES.has(match)) {
+                    return `<span class="smiles-text">${match}</span>`;
+                }
+
+                if (!window.processedSMILES) {
+                    window.processedSMILES = new Set();
+                }
+
+                window.processedSMILES.add(match);
+                return `<span class="molecule-ref" data-smiles="${encodeURIComponent(match)}">
+                    ${match}
+                    <button class="view-3d-btn ml-2 text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
+                        View 3D
+                    </button>
+                </span>`;
+            });
+        }
+
+        async function verifyAndOpenMoleculeModal(smiles) {
+            try {
+            if (!validateSmilesStringSafely(smiles)) {
+                console.warn('Invalid SMILES structure detected:', smiles);
+                showToast('Invalid SMILES structure', 'error'); 
+                return;
+            }
+
+            const response = await fetch('/get_molecule_details', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ smiles })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to get molecule details: ${response.statusText}`);
+            }
+
+            await openMoleculeModal(encodeURIComponent(smiles));
+            } catch (e) {
+            console.error('Error in verifyAndOpenMoleculeModal:', e);
+            showToast('Failed to open molecule viewer', 'error');
+            }
+        }
+
+        function isValidSmiles(smiles) {
+            if (!smiles || typeof smiles !== 'string' || smiles.length < 2 || smiles.length > 1000) {
+                return false;
+            }
+           
+            if (smiles.toUpperCase().startsWith('SMILES:')) {
+                return false;
+            }
+
+            const excludedTerms = new Set([
+                'SMILES', 'SMILE', 'SMILING', 'PDF', 'DOC', 'DOCX', 'XLS', 'XLSX', 
+                'TXT', 'CSV', 'MOL', 'SDF', 'CIF', 'PDB', 'LOG', 'INP', 'OUT',
+                'THE', 'AND', 'FOR', 'WITH', 'FROM', 'INTO', 'THAT', 'THIS',
+                'WHAT', 'WHEN', 'WHERE', 'WHY', 'HOW'
+            ]);
+
+            if (excludedTerms.has(smiles.toUpperCase())) {
+                return false;
+            }
+
+            const nonSmilesPatterns = [
+                /\.(pdf|doc|docx|txt|csv)$/i,         
+                /^(?:https?:\/\/|www\.)/i,            
+                /^(?:\/[a-z0-9]+)+$/i,                
+                /^(?:file|document|section|page)/i     
+            ];
+
+            if (nonSmilesPatterns.some(pattern => pattern.test(smiles))) {
+                return false;
+            }
+
+            const commonWordPattern = /^[A-Za-z]+(?:ing|ed|es|s|er|est|ly|ment|ness|ion|tion|sion|ity|ty|ism|ist|ic|al|ous|ful|able|ible|less|ive|ize|ise|ify|fy)$/;
+            if (commonWordPattern.test(smiles)) {
+                return false;
+            }
+
+            const validCharsRegex = /^[A-Za-z0-9@+\-\[\]\(\)\\/%=#$.,*~{}:]+$/;
+            if (!validCharsRegex.test(smiles)) {
+                return false;
+            }
+
+            const validStartRegex = /^(?:[BCNOFPSI]|Br|Cl|[bcnosp]|\[)/;
+            if (!validStartRegex.test(smiles)) {
+                return false;
+            }
+
+            const hasChemicalFeatures = /[-=#$:.\[\]()+\/{}@]/.test(smiles) || 
+                                       /[0-9]/.test(smiles) ||
+                                       smiles.includes('Cl') ||
+                                       smiles.includes('Br');
+            if (!hasChemicalFeatures) {
+                return false;
+            }
+
+            let bracketCount = 0;
+            let parenthesesCount = 0;
+            let hasValidAtoms = false;
+
+            const validAtoms = new Set([
+                'B', 'C', 'N', 'O', 'F', 'P', 'S', 'I', 'Cl', 'Br',
+                'b', 'c', 'n', 'o', 'p', 's'
+            ]);
+
+            for (let i = 0; i < smiles.length; i++) {
+                const char = smiles[i];
+                if (char === '[') bracketCount++;
+                if (char === ']') bracketCount--;
+                if (char === '(') parenthesesCount++;
+                if (char === ')') parenthesesCount--;
+                if (bracketCount < 0 || parenthesesCount < 0) {
+                    return false;
+                }
+
+                if (i < smiles.length - 1) {
+                    const twoChars = smiles.substr(i, 2);
+                    if (validAtoms.has(twoChars)) {
+                        hasValidAtoms = true;
+                        i++; 
+                        continue;
+                    }
+                }
+                if (validAtoms.has(char)) {
+                    hasValidAtoms = true;
+                }
+            }
+
+            if (bracketCount !== 0 || parenthesesCount !== 0) {
+                return false;
+            }
+
+            if (!hasValidAtoms) {
+                return false;
+            }
+            const ringNumbers = new Map();
+            for (const char of smiles) {
+                if (/\d/.test(char)) {
+                    ringNumbers.set(char, (ringNumbers.get(char) || 0) + 1);
+                }
+            }
+
+            for (const [_, count] of ringNumbers) {
+                if (count % 2 !== 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function highlightKeywords(text) {
+            const keywords = [
+                'chemical', 'reaction', 'compound', 'molecule', 'synthesis',
+                'analysis', 'laboratory', 'experiment', 'safety', 'procedure'
+            ];
+    
+            let highlightedText = text;
+            keywords.forEach(keyword => {
+                const regex = new RegExp(keyword, 'gi');
+                highlightedText = highlightedText.replace(regex, 
+                    `<span class="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">${keyword}</span>`);
+            });
+    
+            return highlightedText;
+        }
+
+        function processSearchResults(results) {
+            if (!results || !Array.isArray(results)) {
+                console.error('Invalid search results format');
+                return;
+            }
+
+            const resultsContainer = document.querySelector('.search-results-list');
+            resultsContainer.innerHTML = '';
+
+            results.forEach(result => {
+                const resultElement = createSearchResultElement(result);
+                resultsContainer.appendChild(resultElement);
+            });
+        }
+
+        function createSearchResultElement(result) {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'search-result-item';
+            resultItem.innerHTML = `
+            <div class="result-content">
+                <a href="${escapeHtml(result.url)}" target="_blank" class="block mb-2 text-blue-600 hover:text-blue-800">
+                <span class="font-medium">${escapeHtml(result.title)}</span>
+                <i class="fas fa-external-link-alt text-sm ml-1"></i>
+                </a>
+                <div class="text-sm text-gray-500 mb-2">${escapeHtml(result.url)}</div>
+                <div class="text-gray-700 text-sm line-clamp-3">${escapeHtml(result.content)}</div>
+            </div>
+            `;
+
+            return resultItem;
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                showToast('Failed to copy text', 'error');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg text-white text-sm transform transition-all duration-300 opacity-0
+                ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+    
+            toast.textContent = message;
+            document.body.appendChild(toast);
+    
+            requestAnimationFrame(() => {
+                toast.classList.add('opacity-100');
+            });
+    
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        function initializeSearchUI() {
+            console.log('Search UI initialized');
+        } 
 
         function toggleOption(option) {
             const input = option === 'literature' ? literaturePath : webUrlPath;
             input.style.display = input.style.display === 'none' ? 'block' : 'none';
         }
 
-        function updateImageName() {
-            const imageFile = imageUpload.files[0];
-            if (imageFile) {
-                imageName.textContent = imageFile.name;
-                console.log("Image selected:", imageFile.name);
-            } else {
-                imageName.textContent = '';
+        function updateImagePreview() {
+            const file = imageUpload.files[0];
+            const errorMessage = document.getElementById('error-message');
+    
+            if (file) {
+            // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    errorMessage.textContent = 'Image size must be less than 5MB';
+                    errorMessage.style.display = 'block';
+                    imageUpload.value = '';
+                    return;
+                }
+        
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    errorMessage.textContent = 'Please upload only image files';
+                    errorMessage.style.display = 'block';
+                    imageUpload.value = '';
+                return;
+            }
+        
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreviewContainer.style.display = 'block';
+                errorMessage.style.display = 'none';
+            
+                 // Add remove button if it doesn't exist
+                const existingButton = imagePreviewContainer.querySelector('.remove-image-btn');
+                if (!existingButton) {
+                    const removeButton = document.createElement('button');
+                    removeButton.className = 'remove-image-btn';
+                    removeButton.innerHTML = '<i class="fas fa-times"></i>';
+                    removeButton.onclick = function(e) {
+                        e.preventDefault();
+                        clearImageUpload();
+                    };
+                    imagePreviewContainer.appendChild(removeButton);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+        function clearImageUpload() {
+            imageUpload.value = '';
+            imagePreviewContainer.style.display = 'none';
+            imagePreview.src = '';
+            document.getElementById('error-message').style.display = 'none';
+            const removeButton = imagePreviewContainer.querySelector('.remove-image-btn');
+            if (removeButton) {
+                removeButton.remove();
             }
         }
 
-        function readFileAsDataURL(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
+        function showThinkingAnimation() {
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'message assistant thinking';
+            thinkingDiv.innerHTML = `
+                <div class="agent-avatar" style="background-image: url('${avatars['System']}')"></div>
+                <div class="bubble">
+                    <div class="thinking-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(thinkingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideThinkingAnimation() {
+            const thinkingIndicator = chatMessages.querySelector('.thinking');
+            if (thinkingIndicator) {
+                thinkingIndicator.remove();
+            }
         }
 
         async function sendMessage() {
             const message = userInput.value.trim();
             const imageFile = imageUpload.files[0];
-            console.log("Image file:", imageFile);
 
             if (message || imageFile) {
                 const formData = new FormData();
                 formData.append('message', message);
-                let imageDataUrl = null;
                 if (imageFile) {
                     formData.append('image', imageFile);
-                    imageDataUrl = await readFileAsDataURL(imageFile);
-                    console.log("Image Data URL created:", imageDataUrl.slice(0, 50) + "...");
                 }
-
-                // Ensure literature_path is always sent, even if empty
-                const literaturePathValue = literaturePath.value.trim();
-                formData.append('literature_path', literaturePathValue);
-                console.log("Sending literature path:", literaturePathValue);
-
+                formData.append('literature_path', literaturePath.value.trim());
                 formData.append('web_url_path', webUrlPath.value.trim());
 
-                addMessage('user', 'User', message, imageDataUrl);
+                addMessage('user', 'You', message, imageFile ? URL.createObjectURL(imageFile) : null);
                 userInput.value = '';
                 imageUpload.value = '';
-                imageName.textContent = '';
+                imagePreviewContainer.style.display = 'none';
+
+                showThinkingAnimation();
 
                 try {
                     const response = await fetch('/simulate', {
@@ -461,25 +3898,16 @@
                     }
 
                     const data = await response.json();
-                    console.log("Received data:", data);
+                    hideThinkingAnimation();
 
                     if (Array.isArray(data)) {
                         for (const msg of data) {
                             if (msg.role === 'assistant') {
-                                if (msg.search_results) {
-                                    // Generate summaries for each search result
-                                    msg.search_results = await Promise.all(msg.search_results.map(async (result) => {
-                                        result.summary = await generateSummary(result.content);
-                                        return result;
-                                    }));
-                                }
                                 addMessage('assistant', msg.name || 'AI', msg.content, null, msg.search_results);
-                                const agent = agents.find(a => a.name === msg.name);
-                                if (agent && Math.random() > 0.7) {
-                                    agent.evolutionLevel = Math.min(agent.evolutionLevel + 1, 5);
-                                    updateAgentStatus();
-                                    addMessage('system', 'System', `${agent.name.replace('_', ' ')} has evolved to level ${agent.evolutionLevel}!`);
-                                }
+                            } else if (msg.role === 'system' && msg.name === 'Performance_Analysis') {
+                                const analysisData = JSON.parse(msg.content);
+                                displayPerformanceAnalysis(analysisData.performance_analysis);
+                                updateAgentsStatus(analysisData.updated_agents);
                             }
                         }
                     } else {
@@ -488,111 +3916,797 @@
                     }
                 } catch (error) {
                     console.error('Error:', error);
+                    hideThinkingAnimation();
                     addMessage('assistant', 'System', 'An error occurred while processing your request.');
                 }
             }
         }
 
-        async function provideFeedback(feedback) {
-            try {
-                const response = await fetch('/feedback', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ feedback: feedback }),
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log("Feedback response:", data);
-
-                addMessage('system', 'System', `Thank you for your feedback! The agents will use this to improve.`);
-
-                const randomAgent = agents[Math.floor(Math.random() * agents.length)];
-                const newSkill = `New_Skill_${Math.floor(Math.random() * 100)}`;
-                addMessage('system', 'System', `${randomAgent.name.replace('_', ' ')} has acquired a new skill: ${newSkill}`);
-
-            } catch (error) {
-                console.error('Error sending feedback:', error);
-                addMessage('system', 'System', 'An error occurred while sending your feedback.');
-            }
-        }
-
-        function copyToClipboard(text) {
+        function copyToClipboard(text, type = 'text') {
             navigator.clipboard.writeText(text).then(() => {
-                alert('URL copied to clipboard!');
+                alert(`${type === 'url' ? 'URL' : 'Text content'} copied to clipboard!`);
             }).catch(err => {
                 console.error('Failed to copy: ', err);
             });
         }
 
         function toggleSummary(index) {
-            const summaryElement = document.querySelectorAll('.search-result-summary')[index];
+            const summaryElement = document.querySelectorAll('.result-summary')[index];
             summaryElement.style.display = summaryElement.style.display === 'none' ? 'block' : 'none';
         }
 
-        async function generateSummary(content) {
-            // This is a placeholder. In a real implementation, you would send this to your backend for processing.
-            // For now, we'll just return a truncated version of the content.
-            return content.length > 200 ? content.slice(0, 200) + '...' : content;
-        }
-
-        function newChat() {
-            // Clear the chat messages and reset the input fields
-            chatMessages.innerHTML = '';
-            userInput.value = '';
-            imageUpload.value = '';
-            imageName.textContent = '';
-            literaturePath.value = '';
-            webUrlPath.value = '';
-            literaturePath.style.display = 'none';
-            webUrlPath.style.display = 'none';
+        async function newChat() {
+            window.processedSMILES.clear(); 
+            try {
+                processedSMILES.clear();
+                const response = await fetch('/initialize', { method: 'POST' });
+                if (!response.ok) {
+                    throw new Error('Failed to initialize chat');
+                }
+                chatMessages.innerHTML = '';
+                userInput.value = '';
+                imageUpload.value = '';
+                imagePreviewContainer.style.display = 'none';
+                literaturePath.value = '';
+                webUrlPath.value = '';
+                literaturePath.style.display = 'none';
+                webUrlPath.style.display = 'none';
+                initializeChat();
+            } catch (error) {
+                console.error('Error initializing chat:', error);
+                addMessage('system', 'System', '[SYSTEM]An error occurred while initializing the chat. Please try again.');
+            }
         }
 
         async function historyChat() {
             try {
-                const response = await fetch('/history', {
-                    method: 'GET',
-                });
-
+                const response = await fetch('/history?session_id=all');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
                 const data = await response.json();
-                console.log("History chat data:", data);
-
-                // Clear the chat messages
+                
+                // Clear current chat
                 chatMessages.innerHTML = '';
+                
+                // Sort sessions by timestamp
+                const sortedSessions = data.sessions.sort((a, b) => 
+                    new Date(b.timestamp) - new Date(a.timestamp)
+                );
+                
+                for (const session of sortedSessions) {
+                    // Add session header
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'message system';
+                    headerDiv.innerHTML = `
+                        <div class="bubble">
+                            <div class="name">Session from ${new Date(session.timestamp).toLocaleString()}</div>
+                            <div class="session-info">
+                                ${session.files.image ? '<i class="fas fa-image"></i> Image Included<br>' : ''}
+                                ${session.files.literature ? `<i class="fas fa-book"></i> Literature Path: ${session.literature_path}<br>` : ''}
+                                ${session.files.web_url ? `<i class="fas fa-globe"></i> Web URL: ${session.web_url_path}` : ''}
+                            </div>
+                        </div>
+                    `;
+                    chatMessages.appendChild(headerDiv);
 
-                // Display the chat history
-                data.forEach(chat => {
-                    addMessage('user', 'User', chat.user_input, chat.image_data);
-                    chat.response.forEach(msg => {
+                    // Add user message with image if present
+                    await addHistoricalMessage(session.user_input, session.image_data, 'user');
+
+                    // Add responses
+                    for (const msg of session.response) {
                         if (msg.role === 'assistant') {
-                            addMessage('assistant', msg.name || 'AI', msg.content, null, msg.search_results);
-                        }
-                    });
-                });
+                            const messageDiv = await addHistoricalMessage(
+                                msg.content,
+                                null,
+                                'assistant',
+                                msg.name,
+                                msg.search_results
+                            );
 
+                            // Add feedback if present in session.feedback
+                            if (session.feedback && Object.keys(session.feedback).length > 0 && msg.name !== 'System' && msg.name !== 'Chat Manager') {
+                                const feedbackContainer = document.createElement('div');
+                                feedbackContainer.className = 'message-feedback-container';
+                                
+                                const feedbackWrapper = document.createElement('div');
+                                feedbackWrapper.className = 'feedback-wrapper';
+                                
+                                // Get feedback for this agent
+                                const agentFeedback = session.feedback[msg.name];
+                                if (agentFeedback !== undefined) {
+                                    const feedbackButton = document.createElement('button');
+                                    feedbackButton.className = 'feedback-toggle-btn rated historical-feedback';
+                                    
+                                    // Find matching feedback option for detailed display
+                                    const options = agentFeedbackOptions[msg.name];
+                                    const matchingOption = options.find(opt => opt.value === agentFeedback);
+                                    
+                                    feedbackButton.innerHTML = `
+                                        <div class="feedback-icon">${matchingOption ? matchingOption.icon : ''}</div>
+                                        <div class="feedback-content">
+                                            <div class="feedback-label">${matchingOption ? matchingOption.label : `Rating: ${agentFeedback}/5`}</div>
+                                            ${matchingOption ? `<div class="feedback-description">${matchingOption.description}</div>` : ''}
+                                        </div>
+                                    `;
+                                    
+                                    feedbackWrapper.appendChild(feedbackButton);
+                                    feedbackContainer.appendChild(feedbackWrapper);
+                                    messageDiv.appendChild(feedbackContainer);
+                                }
+                            }
+                        }
+                    }
+                    // Add separator
+                    const separator = document.createElement('div');
+                    separator.className = 'border-t border-gray-200 dark:border-gray-700 my-4';
+                    chatMessages.appendChild(separator);
+                }
+                
+                // Scroll to top of history
+                chatMessages.scrollTop = 0;
+                
             } catch (error) {
                 console.error('Error fetching chat history:', error);
-                addMessage('system', 'System', 'An error occurred while fetching chat history.');
+                addMessage('system', 'System', '[SYSTEM]An error occurred while fetching chat history.');
             }
         }
 
-        sendBtn.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+        async function addHistoricalMessage(content, imageData, role, name = 'You', searchResults = null) {
+            const template = document.getElementById('history-message-template');
+            const messageDiv = template.content.cloneNode(true).querySelector('.message');
+            messageDiv.classList.add(role);
+            
+            const avatarDiv = messageDiv.querySelector('.agent-avatar');
+            avatarDiv.style.backgroundImage = `url('${avatars[name] || avatars['System']}')`;
+            
+            const nameDiv = messageDiv.querySelector('.name');
+            nameDiv.textContent = name;
+            
+            const contentDiv = messageDiv.querySelector('.content');
+            contentDiv.innerHTML = processSmilesInText(content);
+
+            // Handle image if present
+            if (imageData) {
+            const imageContainer = messageDiv.querySelector('.image-container');
+            const image = messageDiv.querySelector('.history-image');
+            
+            try {
+                // Ensure imageData is properly formatted 
+                const imageSrc = imageData.startsWith('data:') 
+                ? imageData 
+                : `data:image/jpeg;base64,${imageData}`;
+                
+                image.src = imageSrc;
+                imageContainer.style.display = 'block';
+                
+                // Add error handling
+                image.onerror = function() {
+                const errorTemplate = document.getElementById('image-error-template');
+                const errorMessage = errorTemplate.content.cloneNode(true);
+                imageContainer.innerHTML = '';
+                imageContainer.appendChild(errorMessage);
+                };
+            } catch (error) {
+                console.error('Error displaying historical image:', error);
+                imageContainer.style.display = 'none';
+            }
+            }
+
+            // Add search results if present
+            if (searchResults) {
+            const searchResultsDiv = document.createElement('div');
+            searchResultsDiv.className = 'search-results';
+            searchResultsDiv.innerHTML = formatSearchResults(searchResults);
+            messageDiv.querySelector('.bubble').appendChild(searchResultsDiv);
+            }
+
+            chatMessages.appendChild(messageDiv);
+            initializeMoleculeViewers();
+            return messageDiv;
+        }
+
+        function addHistoricalFeedback(messageDiv, feedbackScore) {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'feedback-display';
+            
+            feedbackDiv.innerHTML = `
+                <div class="inline-flex items-center bg-blue-50 dark:bg-blue-900 px-3 py-1 rounded-full text-sm">
+                    <i class="fas fa-star text-yellow-400 mr-1"></i>
+                    Rating: ${feedbackScore}/5
+                </div>
+            `;
+            
+            messageDiv.appendChild(feedbackDiv);
+        }
+
+        function formatSearchResults(results) {
+            if (!results || !Array.isArray(results)) return '';
+            
+            return results.map(searchGroup => `
+                <div class="search-group">
+                    <div class="group-header">
+                        <i class="fas ${searchGroup.type === 'rag' ? 'fa-book' : 'fa-globe'}"></i>
+                        <span>${searchGroup.type === 'rag' ? 'Literature' : 'Web'} Results</span>
+                    </div>
+                    ${searchGroup.results.map(result => `
+                        <div class="result-item">
+                            <div class="result-title">
+                                ${result.url 
+                                    ? `<a href="${result.url}" target="_blank">${result.title}</a>`
+                                    : result.title
+                                }
+                            </div>
+                            <div class="result-content">
+                                ${result.content.substring(0, 200)}...
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            const icon = toggleSidebarBtn.querySelector('i');
+            icon.classList.toggle('fa-chevron-left');
+            icon.classList.toggle('fa-chevron-right');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const themeIcon = document.querySelector('.toggle-theme i');
+            if (document.body.classList.contains('dark-mode')) {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        }
+
+		function showErrorMessage(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function displayPerformanceAnalysis(data) {
+            const analysisDiv = document.createElement('div');
+            analysisDiv.className = 'message assistant';
+            
+            let content = `
+                <div class="agent-avatar" style="background-image: url('${avatars['System']}')"></div>
+                <div class="bubble">
+                    <div class="name">System</div>
+                    <div class="performance-analysis">
+                        <h3 class="font-bold text-lg mb-2">Performance Analysis:</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            `;
+            
+            for (const [agentName, agentData] of Object.entries(data)) {
+                content += `
+                    <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-2">${agentName === 'system' ? 'System-wide Analysis' : agentName}</h4>
+                        <ul class="list-disc list-inside space-y-1">
+                `;
+                
+                if (agentName === 'system') {
+                    content += `
+                        <li>Improvement Rate: ${agentData.improvement_rate.toFixed(4)}</li>
+                        <li>${agentData.convergence_point ? `Convergence Point: ${agentData.convergence_point} iterations` : 'Convergence not detected'}</li>
+                        <li>Total Knowledge Base Size: ${agentData.total_knowledge_base_size}</li>
+                    `;
+                } else {
+                    content += `
+                        <li>Evolution Level: ${agentData.evolution_level}</li>
+                        <li>Initial Performance: ${agentData.initial_performance.toFixed(4)}</li>
+                        <li>Current Performance: ${agentData.current_performance.toFixed(4)}</li>
+                        <li>Improvement Rate: ${agentData.improvement_rate.toFixed(4)}</li>
+                        <li>Knowledge Base Size: ${agentData.knowledge_base_size}</li>
+                        <li>${agentData.convergence_point ? `Convergence at: ${agentData.convergence_point} iterations` : 'Convergence not detected'}</li>
+                    `;
+                }
+                
+                content += `
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            content += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            analysisDiv.innerHTML = content;
+            chatMessages.appendChild(analysisDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function updateAgentsStatus(updatedAgents) {
+            agents = updatedAgents;
+            updateAgentStatus();
+        }
+
+        function initializeChat() {
+            updateAgentStatus();
+            
+            // Get user name from localStorage or a user profile API
+            const userName = localStorage.getItem('userName') || 'Chemist';
+            
+            // Get current experiment context if available
+            const currentExperiment = localStorage.getItem('currentExperiment');
+            
+            let welcomeMessage = `<i class="fas fa-flask" style="font-size: 24px; margin-right: 10px;"></i> Welcome back, ${userName}! How can I assist you with your chemistry experiments today?`;
+            
+            if (currentExperiment) {
+                welcomeMessage += ` I see you were working on ${currentExperiment}. Would you like to continue or start something new?`;
+            }
+            
+            addMessage('assistant', 'System', welcomeMessage);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg text-white text-sm transform transition-all duration-300 opacity-0
+            ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            requestAnimationFrame(() => {
+            toast.classList.add('opacity-100');
+            });
+
+            setTimeout(() => {
+            toast.classList.remove('opacity-100');
+            toast.classList.add('opacity-0');
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+            }, 3000);
+        }
+
+        // Initialize the interface
+        function initializeInterface() {
+            updateAgentStatus();
+            sendBtn.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            toggleSidebarBtn.addEventListener('click', toggleSidebar);
+
+            initializeChat();
+        }
+
+        // Set up WebSocket for real-time updates
+        const socket = io();
+
+        socket.on('agentLevelUp', (data) => {
+            console.log('Agent level up event received:', data);
+            const agent = agents.find(a => a.name === data.agentName);
+            if (agent) {
+                agent.evolutionLevel = data.newLevel;
+                if (data.newSkill) {
+                    agent.skills.push(data.newSkill);
+                }
+                updateAgentStatus();
+                const agentElement = document.getElementById(`${data.agentName}-info`);
+                if (agentElement) {
+                    agentElement.classList.add('level-up');
+                    setTimeout(() => {
+                        agentElement.classList.remove('level-up');
+                    }, 1000);
+                }
             }
         });
 
-        console.log("JavaScript initialized");
+        // Call the initialization function when the page loads
+        window.onload = initializeInterface;
+
+        async function preSmilesCheck(smiles) {
+            try {
+            if (!validateSmilesStringSafely(smiles)) {
+                return false;
+            }
+
+            const response = await fetch('/get_molecule_details', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ smiles: smiles }),
+                timeout: 5000 
+            });
+
+            if (!response.ok) {
+                return false;
+            }
+
+            const data = await response.json();
+            return data && data.formula && data.atoms && data.atoms.length > 0;
+
+            } catch (error) {
+            console.error('SMILES pre-check failed:', error);
+            return false;
+            }
+        }
+
+        function validateSmilesStringSafely(smiles) {
+            try {
+                // Basic input validation  
+                if (!smiles || typeof smiles !== 'string' || smiles.length < 2) {
+                    return false;  
+                }
+
+                // Check for HTML injection patterns
+                const htmlInjectionPatterns = [
+                    '">',
+                    '"/>',
+                    '/>',
+                    '</[a-zA-Z]',
+                    '<[a-zA-Z]'
+                ];
+                
+                if (htmlInjectionPatterns.some(pattern => smiles.includes(pattern) || 
+                    new RegExp(pattern).test(smiles))) {
+                    return false;
+                }
+
+                // Remove any HTML tags and decode entities before validation
+                smiles = smiles.replace(/(<([^>]+)>)/gi, '')
+                              .replace(/&quot;/g, '"')
+                              .replace(/&gt;/g, '>')
+                              .replace(/&lt;/g, '<')
+                              .trim();
+
+                // Strict character validation
+                const validSmilesPattern = /^([A-Za-z0-9@+\-\[\]\(\)\\/%=#$.,*~{}:])+$/;
+                if (!validSmilesPattern.test(smiles)) {
+                    return false;
+                }
+
+                // Enhanced ring validation
+                const ringNumbers = new Map();
+                let i = 0;
+                while (i < smiles.length) {
+                    if (smiles[i] === '%') {
+                        if (i + 2 < smiles.length) {
+                            const ringNum = smiles.substr(i + 1, 2);
+                            if (/^\d{2}$/.test(ringNum)) {
+                                ringNumbers.set(ringNum, (ringNumbers.get(ringNum) || 0) + 1);
+                                i += 3;
+                                continue;
+                            }
+                        }
+                    } else if (/\d/.test(smiles[i])) {
+                        ringNumbers.set(smiles[i], (ringNumbers.get(smiles[i]) || 0) + 1);
+                    }
+                    i++;
+                }
+
+                // Check ring number pairs
+                for (const [_, count] of ringNumbers) {
+                    if (count % 2 !== 0) {
+                        return false;
+                    }
+                }
+
+                // Validate bracket and parentheses balance
+                let bracketCount = 0;
+                let parenthesesCount = 0;
+                
+                for (const char of smiles) {
+                    if (char === '[') bracketCount++;
+                    if (char === ']') bracketCount--;
+                    if (char === '(') parenthesesCount++;
+                    if (char === ')') parenthesesCount--;
+                    
+                    if (bracketCount < 0 || parenthesesCount < 0) {
+                        return false;
+                    }
+                }
+                
+                if (bracketCount !== 0 || parenthesesCount !== 0) {
+                    return false;
+                }
+
+                // Validate atoms
+                const validAtoms = new Set([
+                    'C', 'c', 'N', 'n', 'O', 'o', 'P', 'p', 'S', 's',
+                    'F', 'Cl', 'Br', 'I', 'B', 'Si', 'Na', 'Mg', 'Al', 'K',
+                    'Ca', 'Fe', 'Cu', 'Zn', 'Se', 'Ag', 'Sn', 'Au', 'Hg', 'Pb'
+                ]);
+
+                const atomPattern = /(?:\[([^\]]+)\]|([A-Z][a-z]?|[a-z]))/g;
+                let hasValidAtom = false;
+                let match;
+
+                while ((match = atomPattern.exec(smiles)) !== null) {
+                    const atom = match[1] || match[2];
+                    if (validAtoms.has(atom)) {
+                        hasValidAtom = true;
+                    } else if (match[1]) {
+                        if (!/^[A-Za-z][A-Za-z0-9@+\-]*$/.test(match[1])) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+
+                return hasValidAtom;
+
+            } catch (e) {
+                console.error('SMILES validation error:', e);
+                return false;
+            }
+        }
+
+        const originalInitMoleculeViewers = initializeMoleculeViewers;
+        initializeMoleculeViewers = function() {
+            try {
+                document.querySelectorAll('[data-smiles]').forEach(element => {
+                    if (!element.hasAttribute('data-initialized')) {
+                        const smiles = element.getAttribute('data-smiles');
+                        if (smiles) {
+                            const decodedSmiles = decodeURIComponent(smiles);
+                            if (validateSmilesStringSafely(decodedSmiles)) {
+                                element.addEventListener('click', function() {
+                                    verifyAndOpenMoleculeModal(decodedSmiles);
+                                });
+                                element.setAttribute('data-initialized', 'true');
+                            } else {
+                                element.classList.remove('molecule-ref');
+                                element.removeAttribute('data-smiles');
+                            }
+                        }
+                    }
+                });
+
+                document.querySelectorAll('.view-3d-btn').forEach(btn => {
+                    if (!btn.hasAttribute('data-initialized')) {
+                        btn.addEventListener('click', async function(e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            
+                            const smilesElement = this.closest('[data-smiles]');
+                            if (!smilesElement) {
+                                showToast('No SMILES data found', 'error');
+                                return;
+                            }
+
+                            const smiles = smilesElement.getAttribute('data-smiles');
+                            if (!smiles) {
+                                showToast('Invalid SMILES data', 'error');
+                                return;
+                            }
+
+                            const decodedSmiles = decodeURIComponent(smiles);
+                            if (!validateSmilesStringSafely(decodedSmiles)) {
+                                showToast('Invalid SMILES structure', 'error'); 
+                                return;  
+                            }
+
+                            try {
+                                await verifyAndOpenMoleculeModal(decodedSmiles);
+                            } catch (error) {
+                                console.error('Error opening molecule viewer:', error);
+                                showToast('Failed to open molecule viewer', 'error');
+                            }
+                        });
+                        btn.setAttribute('data-initialized', 'true'); 
+                    }
+                });
+            } catch (e) {
+                console.error('Error in molecule viewers initialization:', e);
+                if (typeof originalInitMoleculeViewers === 'function') {
+                    originalInitMoleculeViewers();
+                }
+            }
+        };
+
+        // Add enhanced verify and open function
+        const originalVerifyAndOpen = verifyAndOpenMoleculeModal;
+        verifyAndOpenMoleculeModal = async function(smiles) {
+            try {
+                if (!validateSmilesStringSafely(smiles)) {
+                    console.warn('Invalid SMILES structure detected:', smiles);
+                    return;
+                }
+
+                if (typeof originalVerifyAndOpen === 'function') {
+                    await originalVerifyAndOpen(smiles);
+                } else {
+                    await openMoleculeModal(encodeURIComponent(smiles));
+                }
+            } catch (e) {
+                console.error('Error in verifyAndOpenMoleculeModal:', e);
+            }
+        };
+
+        // Add to window object 
+        window.validateSmilesStringSafely = validateSmilesStringSafely;
+
+        function processSmilesInText(text) {
+            if (!text || typeof text !== 'string') return text;
+
+            // Skip if text contains specific HTML elements
+            if (text.includes('class="fas fa-flask"')) {
+                return text;
+            }
+
+            const isSearchResult = text.includes('[WEB_SEARCH_SUMMARY:') || text.includes('[RAG_SEARCH:');
+            const smilesOccurrences = new Map();
+            
+            // Enhanced SMILES pattern with more precise atom matching
+            const smilesPattern = /(?<!['"/<>])\b(?:[CNOPSBFIKLi]|[CNOPSBFIKLi][a-z]|Cl|Br|Na|Mg|Al|Si|Ca|Fe|Zn|Se|Ag|Sn|Au|Hg|Pb)(?:[0-9]*[A-Z][a-z]?|[0-9]+|[-=#$:.\[\]()+\/{}@]|\([^)]*\))*\b(?!['"/<>])/g;
+
+            // Pre-process the text to handle problematic patterns
+            let processedText = text;
+            
+            // Remove or replace known problematic patterns before processing
+            const problematicPatterns = [
+                { pattern: /c1ccc1">c1ccc1/g, replacement: 'c1ccc1' },
+                { pattern: /([^"'>]*)">([^"'>]*)/g, replacement: '$1 $2' },
+                { pattern: /">[^"'<>]*/g, replacement: '' },
+                { pattern: /[^"'<>]*">/g, replacement: '' }
+            ];
+
+            problematicPatterns.forEach(({pattern, replacement}) => {
+                processedText = processedText.replace(pattern, replacement);
+            });
+
+            return processedText.replace(smilesPattern, (match, offset) => {
+                // Enhanced validation checks
+                const contextLength = 30;
+                const prevContext = processedText.slice(Math.max(0, offset - contextLength), offset);
+                const nextContext = processedText.slice(offset + match.length, offset + match.length + contextLength);
+
+                // Comprehensive pattern checking
+                const invalidPatterns = [
+                    '">', '"/>',                    // HTML closing patterns
+                    '<', '>',                       // HTML tags
+                    '"', "'",                       // Quotes
+                    'SMILES:',                      // SMILES label
+                    'http', 'www.',                 // URLs
+                    /c\d+.*>.*c\d+/,               // Problematic ring patterns
+                    /.*">.*|.*"\/>.*/,             // HTML injection patterns
+                    /.*[<>"].*/                     // General HTML patterns
+                ];
+
+                // Check for any invalid patterns
+                const hasInvalidPattern = invalidPatterns.some(pattern => {
+                    if (typeof pattern === 'string') {
+                        return match.includes(pattern) || 
+                               prevContext.includes(pattern) || 
+                               nextContext.includes(pattern);
+                    }
+                    return pattern.test(match) || pattern.test(prevContext) || pattern.test(nextContext);
+                });
+
+                if (hasInvalidPattern) {
+                    return match;
+                }
+
+                // Additional SMILES validation
+                if (!validateSmilesStringSafely(match)) {
+                    return match;
+                }
+
+                const encodedSmiles = encodeURIComponent(match);
+                smilesOccurrences.set(encodedSmiles, (smilesOccurrences.get(encodedSmiles) || 0) + 1);
+
+                return `<span class="smiles-placeholder" data-smiles="${encodedSmiles}">${match}</span>`;
+            });
+        }
+
+        async function updateSmilesElements() {
+            const placeholders = document.querySelectorAll('.smiles-placeholder');
+            
+            for (const placeholder of placeholders) {
+                const smiles = decodeURIComponent(placeholder.dataset.smiles);
+                
+                try {
+                    // Enhanced safety checks
+                    if (smiles.includes('"') || 
+                        smiles.includes("'") || 
+                        smiles.includes('<') || 
+                        smiles.includes('>') ||
+                        smiles.includes('">') ||
+                        /c\d+.*>.*c\d+/.test(smiles) ||
+                        /.*">.*/.test(smiles)
+                    ) {
+                        placeholder.className = 'smiles-text';
+                        placeholder.innerHTML = smiles;
+                        continue;
+                    }
+
+                    // Verify SMILES structure server-side
+                    const moleculeResponse = await fetch('/get_molecule_details', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json' 
+                        },
+                        body: JSON.stringify({ smiles })
+                    });
+
+                    if (moleculeResponse.ok) {
+                        const moleculeData = await moleculeResponse.json();
+                        // Only show 3D button if molecule data is valid and complete
+                        if (moleculeData && 
+                            moleculeData.atoms && 
+                            moleculeData.atoms.length > 0 && 
+                            moleculeData.formula
+                        ) {
+                            placeholder.className = 'molecule-ref';
+                            if (!placeholder.hasAttribute('data-processed')) {
+                                placeholder.innerHTML = `
+                                    ${smiles}
+                                    <button class="view-3d-btn ml-2 text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
+                                        <i class="fas fa-cube mr-1"></i>View 3D
+                                    </button>
+                                `;
+                                placeholder.setAttribute('data-processed', 'true');
+                                continue;
+                            }
+                        }
+                    }
+                    
+                    // Default to plain text display
+                    placeholder.className = 'smiles-text';
+                    placeholder.innerHTML = smiles;
+                    
+                } catch (error) {
+                    console.error('Error updating SMILES element:', error);
+                    placeholder.className = 'smiles-text';
+                    placeholder.innerHTML = smiles;
+                }
+            }
+        }
+        window.processSmilesInText = processSmilesInText;
+
+        function updateUserProfile(name) {
+            localStorage.setItem('userName', name);
+            // You might want to update this in your backend as well
+        }
+
+        function saveExperimentContext(experimentName) {
+            localStorage.setItem('currentExperiment', experimentName);
+            // You might want to save this in your backend as well
+        }
+
+        function clearExperimentContext() {
+            localStorage.removeItem('currentExperiment');
+            // You might want to clear this in your backend as well
+        }
+
+        // Event listeners for additional buttons
+        document.getElementById('save-experiment').addEventListener('click', () => {
+            const experimentName = prompt("Enter a name for this experiment:");
+            if (experimentName) {
+                saveExperimentContext(experimentName);
+                addMessage('system', 'System', `[SYSTEM]Experiment "${experimentName}" has been saved.`);
+            }
+        });
+
+        document.getElementById('clear-experiment').addEventListener('click', () => {
+            if (confirm("Are you sure you want to clear the current experiment?")) {
+                clearExperimentContext();
+                addMessage('system', 'System', '[SYSTEM]Current experiment context has been cleared.');
+            }
+        });
+        document.addEventListener('DOMContentLoaded', initializeSearchUI);
+        // This ensures that the code runs after the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', (event) => {
+            console.log('DOM fully loaded and parsed');
+            // You can add any additional initialization code here
+        });
     </script>
 </body>
 </html>
