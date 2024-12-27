@@ -1,4 +1,4 @@
-# Application of Adaptive AI Agents in Chemistry Research: An Intelligent Assistance System with Evolutionary-Inspired Features 🧪🤖
+# AI Agents in Chemical Research: GVIM - An Intelligent Research Assistant System 🧪🤖
 
 > **Important Notice**: Commercial use of this project's code requires explicit authorization from the author.
 
