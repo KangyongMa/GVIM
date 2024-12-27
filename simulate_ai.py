@@ -47,7 +47,7 @@ config_list = [
     {
         "model": "MistralNemo",
         "api_key": "NA",
-        "base_url": "your_url"
+        "base_url": "https://6466-34-87-92-219.ngrok-free.app/v1"
     },
     {
         "model": "mixtral-8x7b-32768",
