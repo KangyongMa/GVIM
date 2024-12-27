@@ -74,6 +74,11 @@ This project involves fine-tuning open-source large language models with chemica
 ![Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.png)
 [Watch Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.mp4)
 
+## 🚀 Leveraging Free GPU Resources on Colab
+🌟 Building on this, all the project's fine-tuned models can leverage the free GPU resources available on Colab and utilize internal network penetration technology to make calls. This is perfect for teams without funding to use this project, as it will continue to improve and optimize over time. 🚀
+
+🎥 Here is a demonstration video on running fine-tuned models using free GPU resources: Demo Video.
+
 ## 🧬 Key Additions
 1. **Configuration Section**: Added instructions for setting the file path and managing API usage limits
 2. **File Path Update**: Explicitly mentioned to update the file path based on the user's local setup
