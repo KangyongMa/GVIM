@@ -22,8 +22,8 @@ This project involves fine-tuning open-source large language models with chemica
 - Fine-tuning mainstream open-source large language models
 - Developing a specialized automatic scoring system for the chemistry domain
 
-### Innovative Chemical Intelligent Assistant System Design
-- Using the fine-tuned Mistral Nemo model as one of the primary models
+### Innovative Chemical Intelligent Assistant System DesignUsing the 
+- Using fine-tuned models as part of the system's models
 - Incorporating mechanisms for flexible invocation of various advanced models
 - Continuously leveraging the latest AI capabilities, considering the rapid iteration of large language models
 
@@ -31,10 +31,10 @@ This project involves fine-tuning open-source large language models with chemica
 - Integrating professional functions such as molecular visualization, SMILES string processing, and chemical literature retrieval
 - Significantly enhancing the system's practical value in chemical research and applications
 
-### Autonomous Evolution Capability
+### Limited Improvement Capability
 - Through knowledge accumulation, skill acquisition, performance evaluation, and collective collaboration mechanisms
 - Continuously optimizing professional capabilities and interaction quality
-- Breaking through the inherent static limitations of traditional AI systems
+- Addressing certain deficiencies of traditional systems
 
 ## 📹 Project Demonstrations
 
