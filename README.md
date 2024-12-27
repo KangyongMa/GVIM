@@ -13,7 +13,7 @@
 
 ## 📌 Overview
 
-This project involves fine-tuning open-source large language models with chemical science data, evaluated using a specialized automated scoring system. The resulting chemical intelligent assistant system utilizes the fine-tuned Mistral Nemo model and can flexibly incorporate various advanced models. It integrates chemistry-specific features like molecular visualization and literature retrieval, while also possessing autonomous evolution capabilities through knowledge accumulation, skill acquisition, and collaborative mechanisms. This approach enables continuous optimization of the system's professional abilities and interaction quality, overcoming limitations of traditional static AI systems in the chemistry domain.
+This project involves fine-tuning open-source large language models with chemical science data, evaluated using a specialized automated scoring system. The resulting chemical intelligent assistant system utilizes the fine-tuned large models and can flexibly integrate various advanced models. It integrates chemistry-specific features like molecular visualization and literature retrieval, while also possessing autonomous evolution capabilities through knowledge accumulation, skill acquisition, and collaborative mechanisms. This approach enables continuous optimization of the system's professional abilities and interaction quality, overcoming limitations of traditional static AI systems in the chemistry domain.
 
 ## 🌟 Key Features
 
