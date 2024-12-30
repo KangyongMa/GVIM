@@ -103,7 +103,7 @@ In this demonstration video, you will learn:
 - Techniques for maintaining stable model performance
 - Common troubleshooting solutions
 
-🎥 [Click here to watch the complete tutorial on using free GPU resources for model deployment](https://youtu.be/QGwVVdinJPU)
+🎥  &nbsp;[Click here to watch the complete tutorial on using free GPU resources for model deployment](https://youtu.be/QGwVVdinJPU)
 
 ## 🧬 Key Additions
 1. **Configuration Section**: Added instructions for setting the file path and managing API usage limits
