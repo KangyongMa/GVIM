@@ -1,40 +1,29 @@
 # AI Agents in Chemical Research: GVIM - An Intelligent Research Assistant System 🧪🤖
 
-<div align="center" style="font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;">
-
 > **Important Notice**: Commercial use of this project's code requires explicit authorization from the author.
+
+<div align="center">
 
 [![Paper](https://img.shields.io/badge/📑_Paper-Read-blue)](https://chemrxiv.org/engage/chemrxiv/article-details/66bca9acf3f4b05290da15de)
 [![Install](https://img.shields.io/badge/📝_Install-Video-green)](https://www.youtube.com/watch?v=1eMwus98BB8)
 [![Data](https://img.shields.io/badge/📊_Data-Access-orange)](https://huggingface.co/datasets/KANGYONGMA/GVIM)
 [![Demo](https://img.shields.io/badge/🎥_Demo-Watch-red)](https://www.youtube.com/watch?v=fb8hdho_89s&t=128s)
 
-<div style="margin: 30px 0;">
-  
 ![Table of Contents](https://github.com/KangyongMa/GVIM/blob/main/TOC.jpg)
 
 </div>
-</div>
-
-<div style="font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6;">
 
 ## 📌 Overview
 
-<div style="font-size: 16px; color: #2c3e50;">
-
 This project involves fine-tuning open-source large language models with chemical science data, evaluated using a specialized automated scoring system. The resulting chemical intelligent assistant system not only leverages the fine-tuned large models but also allows for flexible integration of various advanced models. It integrates chemistry-specific features like molecular visualization and literature retrieval, while also possessing limited improvement capabilities through knowledge accumulation, skill acquisition, and collaborative mechanisms. This approach helps enhance the system's professional abilities and interaction quality, partially addressing certain limitations of traditional static AI systems in the chemistry domain.
 
-</div>
+<div align="center">
 
-<div align="center" style="margin: 30px 0;">
-  
 ![Research Process](https://github.com/KangyongMa/GVIM/blob/main/Research%20Process.jpg)
 
 </div>
 
 ## 🌟 Key Features
-
-<div style="font-size: 16px; color: #2c3e50;">
 
 ### Fine-tuning Large Language Models Based on Chemistry Domain Data
 - Utilizing collected and curated chemistry instruction data
@@ -54,8 +43,6 @@ This project involves fine-tuning open-source large language models with chemica
 - Through knowledge accumulation, skill acquisition, performance evaluation, and collective collaboration mechanisms
 - Continuously optimizing professional capabilities and interaction quality
 - Addressing certain deficiencies of traditional systems
-
-</div>
 
 ## 📹 Project Demonstrations
 
@@ -110,9 +97,7 @@ This project involves fine-tuning open-source large language models with chemica
 🌟 Building on this, all the project's fine-tuned models can leverage the free GPU resources available on Colab and utilize internal network penetration technology to make calls. This is perfect for teams without funding to use this project, as it will continue to improve and optimize over time. 🚀
 
 🎥 Here's a demonstration of running fine-tuned models using free GPU resources:
-<video width="100%" controls>
-  <source src="https://youtu.be/QGwVVdinJPU" type="video/mp4">
-</video>
+[![Colab Demo](https://img.youtube.com/vi/QGwVVdinJPU/0.jpg)](https://youtu.be/QGwVVdinJPU)
 
 ## 🧬 Key Additions
 1. **Configuration Section**: Added instructions for setting the file path and managing API usage limits
@@ -160,67 +145,3 @@ For inquiries and commercial usage authorization:
 - 📧 Email: kangyongma@outlook.com, kangyongma@gmail.com
 - 🏢 Institution: College of Physics and Electronic Information Engineering, Zhejiang Normal University
 - 📍 Location: Jinhua City, 321000, China
-
-</div>
-
-<style>
-  h1, h2, h3, h4 {
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    font-weight: 600;
-    color: #1a365d;
-    margin-top: 1.5em;
-    margin-bottom: 0.8em;
-  }
-  
-  h1 { font-size: 2.5em; }
-  h2 { font-size: 2em; }
-  h3 { font-size: 1.5em; }
-  h4 { font-size: 1.25em; }
-  
-  p, li {
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    line-height: 1.6;
-    color: #2c3e50;
-  }
-
-  img {
-    max-width: 100%;
-    height: auto;
-    margin: 20px 0;
-  }
-
-  video {
-    max-width: 100%;
-    height: auto;
-    margin: 20px 0;
-  }
-
-  code {
-    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
-    background-color: #f6f8fa;
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
-    font-size: 85%;
-  }
-
-  pre code {
-    display: block;
-    padding: 1em;
-    overflow-x: auto;
-  }
-
-  blockquote {
-    border-left: 4px solid #1a365d;
-    margin: 0;
-    padding-left: 1em;
-    color: #4a5568;
-  }
-
-  .badge-container {
-    margin: 20px 0;
-  }
-
-  .badge-container img {
-    margin: 0 4px;
-  }
-</style>
