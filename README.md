@@ -11,6 +11,12 @@
 
 </div>
 
+<div align="center">
+  
+![Table of Contents](https://github.com/KangyongMa/GVIM/blob/main/TOC.jpg)
+
+</div>
+
 ## 📌 Overview
 
 This project involves fine-tuning open-source large language models with chemical science data, evaluated using a specialized automated scoring system. The resulting chemical intelligent assistant system not only leverages the fine-tuned large models but also allows for flexible integration of various advanced models. It integrates chemistry-specific features like molecular visualization and literature retrieval, while also possessing limited improvement capabilities through knowledge accumulation, skill acquisition, and collaborative mechanisms. This approach helps enhance the system's professional abilities and interaction quality, partially addressing certain limitations of traditional static AI systems in the chemistry domain.
