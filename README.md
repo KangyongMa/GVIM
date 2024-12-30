@@ -9,11 +9,10 @@
 [![Data](https://img.shields.io/badge/📊_Data-Access-orange)](https://huggingface.co/datasets/KANGYONGMA/GVIM)
 [![Demo](https://img.shields.io/badge/🎥_Demo-Watch-red)](https://www.youtube.com/watch?v=fb8hdho_89s&t=128s)
 
-> Click the badges above to:  
-> • 📑 Read our research paper on ChemRxiv  
-> • 📝 Watch the installation guide video  
-> • 📊 Access our dataset on Hugging Face  
-> • 🎥 View the system demonstration
+📑 **Paper** - Read our research paper on ChemRxiv  
+📝 **Install** - Watch the installation guide video  
+📊 **Data** - Access our dataset on Hugging Face  
+🎥 **Demo** - View the system demonstration
 
 ![Table of Contents](https://github.com/KangyongMa/GVIM/blob/main/TOC.jpg)
 
