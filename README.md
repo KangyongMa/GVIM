@@ -39,60 +39,51 @@ This project involves fine-tuning open-source large language models with chemica
 ## 📹 Project Demonstrations
 
 ### Nature Chemistry Latest Reports
-![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/UI%20of%20Set%20Web%20URL.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/Demo%20Video%20of%20Search%20on%20the%20Official%20Website%20of%20Nature%20Chemistry%20Journal.mp4" type="video/mp4">
-</video>
+[![Nature Chemistry latest reports](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/UI%20of%20Set%20Web%20URL.png)](https://github.com/KangyongMa/GVIM/blob/main/Demo%20Video%20of%20Search%20on%20the%20Official%20Website%20of%20Nature%20Chemistry%20Journal.mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%20Video%20of%20Search%20on%20the%20Official%20Website%20of%20Nature%20Chemistry%20Journal.mp4)
 
 ### Multimodal Large Model Test
-![Multimodal Large Model Test](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Functionality%20Expansion%E2%80%94Multimodal%20Models.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/The%20multimodal%20system%20model%20image%20recognition%20demonstration%20video..mp4" type="video/mp4">
-</video>
+[![Multimodal Large Model Test](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Functionality%20Expansion%E2%80%94Multimodal%20Models.png)](https://github.com/KangyongMa/GVIM/blob/main/The%20multimodal%20system%20model%20image%20recognition%20demonstration%20video..mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/The%20multimodal%20system%20model%20image%20recognition%20demonstration%20video..mp4)
 
 ### Handwritten Chemical Formula Recognition
-![Handwritten Formula Recognition](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Multimodal%20system%20handwritten%20chemical%20formula%20recognition%20demonstration%20video.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20system%20handwritten%20chemical%20formula%20recognition%20demonstration%20video..mp4" type="video/mp4">
-</video>
+[![Handwritten Formula Recognition](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Multimodal%20system%20handwritten%20chemical%20formula%20recognition%20demonstration%20video.png)](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20system%20handwritten%20chemical%20formula%20recognition%20demonstration%20video..mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Multimodal%20system%20handwritten%20chemical%20formula%20recognition%20demonstration%20video..mp4)
 
 ### Local Document Knowledge System Demos
 
 #### Demo 1
-![Demo 1](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4" type="video/mp4">
-</video>
+[![Demo 1](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)](https://github.com/KangyongMa/GVIM/blob/main/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%201%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
 #### Demo 2
-![Demo 2](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%202%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/Demo%202%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4" type="video/mp4">
-</video>
+[![Demo 2](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%202%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)](https://github.com/KangyongMa/GVIM/blob/main/Demo%202%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%202%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
 #### Demo 3
-![Demo 3](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%203%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/Demo%203%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4" type="video/mp4">
-</video>
+[![Demo 3](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%203%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)](https://github.com/KangyongMa/GVIM/blob/main/Demo%203%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%203%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
 #### Demo 4
-![Demo 4](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%204%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/Demo%204%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4" type="video/mp4">
-</video>
+[![Demo 4](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demo%204%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.png)](https://github.com/KangyongMa/GVIM/blob/main/Demo%204%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Demo%204%20of%20an%20intelligent%20system%20based%20on%20local%20document%20knowledge.mp4)
 
 ### Chat History Management
-![Chat History](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/UI%20of%20System%20History.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat.mp4" type="video/mp4">
-</video>
+[![Chat History](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/UI%20of%20System%20History.png)](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat.mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20the%20conversion%20between%20New%20Chat%20and%20History%20Chat.mp4)
 
 ### Digital Discovery Search Capabilities
-![Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.png)
-<video width="100%" controls>
-  <source src="https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.mp4" type="video/mp4">
-</video>
+[![Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.png)](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.mp4)
+
+[🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.mp4)
 
 ## 🚀 Leveraging Free GPU Resources on Colab
 🌟 Building on this, all the project's fine-tuned models can leverage the free GPU resources available on Colab and utilize internal network penetration technology to make calls. This is perfect for teams without funding to use this project, as it will continue to improve and optimize over time. 🚀
