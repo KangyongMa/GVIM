@@ -96,8 +96,14 @@ This project involves fine-tuning open-source large language models with chemica
 ## 🚀 Leveraging Free GPU Resources on Colab
 🌟 Building on this, all the project's fine-tuned models can leverage the free GPU resources available on Colab and utilize internal network penetration technology to make calls. This is perfect for teams without funding to use this project, as it will continue to improve and optimize over time. 🚀
 
-🎥 Here's a demonstration of running fine-tuned models using free GPU resources:
-[![Colab Demo](https://img.youtube.com/vi/QGwVVdinJPU/0.jpg)](https://youtu.be/QGwVVdinJPU)
+In this demonstration video, you will learn:
+- How to set up the environment in Google Colab
+- Step-by-step process of loading and running our fine-tuned models
+- Tips for optimizing GPU resource usage
+- Techniques for maintaining stable model performance
+- Common troubleshooting solutions
+
+🎥 [Click here to watch the complete tutorial on using free GPU resources for model deployment](https://youtu.be/QGwVVdinJPU)
 
 ## 🧬 Key Additions
 1. **Configuration Section**: Added instructions for setting the file path and managing API usage limits
