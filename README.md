@@ -137,11 +137,11 @@ python app.py
 ## 📚 Citation
 
 ```bibtex
-@article{ma2024chemai,
+@article{Digital Discovery,
   author = {Kangyong Ma},
   affiliation = {College of Physics and Electronic Information Engineering, Zhejiang Normal University},
   address = {Jinhua City, 321000, China},
-  doi = {10.26434/chemrxiv-2024-6tv8c},
+  doi = {10.1039/D4DD00398E},
   email = {kangyongma@outlook.com, kangyongma@gmail.com}
 }
 ```
