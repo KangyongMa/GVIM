@@ -4,7 +4,7 @@
 
 <div align="center">
 
-[![Paper](https://img.shields.io/badge/📑_Paper-Read-blue)](https://chemrxiv.org/engage/chemrxiv/article-details/66bca9acf3f4b05290da15de)
+[![Paper](https://img.shields.io/badge/📑_Paper-Read-blue)](https://pubs.rsc.org/en/content/articlepdf/2025/dd/d4dd00398e)
 [![Install](https://img.shields.io/badge/📝_Install-Video-green)](https://www.youtube.com/watch?v=1eMwus98BB8)
 [![Data](https://img.shields.io/badge/📊_Data-Access-orange)](https://huggingface.co/datasets/KANGYONGMA/GVIM)
 [![Demo](https://img.shields.io/badge/🎥_Demo-Watch-red)](https://www.youtube.com/watch?v=fb8hdho_89s&t=128s)
