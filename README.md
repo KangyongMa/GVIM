@@ -45,6 +45,12 @@ This project involves fine-tuning open-source large language models with chemica
 - Continuously optimizing professional capabilities and interaction quality
 - Addressing certain deficiencies of traditional systems
 
+### ✨NEW!✨ Browser-based Chemical Reagent Purchasing 🛒🧪
+- AI-assisted browsing and comparison of chemical reagents across multiple supplier websites
+- Automatic selection of optimal reagents based on purity, price, and delivery time
+- Streamlined checkout process with saved laboratory shipping information
+- Purchase history tracking and reordering capabilities for frequently used reagents
+
 ## 📹 Project Demonstrations
 
 ### Nature Chemistry Latest Reports
@@ -93,6 +99,10 @@ This project involves fine-tuning open-source large language models with chemica
 [![Digital Discovery](https://github.com/KangyongMa/GVIM/blob/main/Basic%20UI/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.png)](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.mp4)
 
 [🎬 Watch Demo Video](https://github.com/KangyongMa/GVIM/blob/main/Demonstration%20of%20Search%20Capabilities%20for%20Digital%20Discovery.mp4)
+
+### AI Browser-Use Capabilities
+[![Browser-Use Capabilities](https://github.com/KangyongMa/GVIM-V2.0/blob/main/AI%20Browser-use.png)]([https://www.youtube.com/watch?v=wRy4Un1e1sw])
+[🎬 Watch Demo Video](https://www.youtube.com/watch?v=wRy4Un1e1sw)
 
 ## 🚀 Leveraging Free GPU Resources on Colab
 🌟 Building on this, all the project's fine-tuned models can leverage the free GPU resources available on Colab and utilize internal network penetration technology to make calls. This is perfect for teams without funding to use this project, as it will continue to improve and optimize over time. 🚀
