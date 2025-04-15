@@ -1,5 +1,9 @@
 # AI Agents in Chemical Research: GVIM - An Intelligent Research Assistant System 🧪🤖
 
+<div align="center">
+  <img src="https://github.com/KangyongMa/GVIM/blob/main/Logo.bmp" alt="GVIM Logo" width="200"/>
+</div>
+
 > **Important Notice**: Commercial use of this project's code requires explicit authorization from the author.
 
 <div align="center">
