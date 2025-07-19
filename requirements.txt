@@ -146,7 +146,7 @@ pure_eval==0.2.3
 py3Dmol==2.4.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
-pyautogen==0.2.31
+ag2==0.2.31
 pycairo==1.26.1
 pycodestyle==2.12.0
 pycparser==2.21
